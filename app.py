@@ -28,7 +28,15 @@ if generate_button:
             generated_copy = generate_copy(product_description)
 
             st.subheader("Generated Draft")
-            st.markdown(generated_copy)
+
+            st.markdown("### Headline")
+            st.write(generated_copy.headline)
+
+            st.markdown("### Body")
+            st.write(generated_copy.body)
+
+            st.markdown("### CTA")
+            st.write(generated_copy.cta)
 
         else:
             st.error("OpenAI API key is missing.")

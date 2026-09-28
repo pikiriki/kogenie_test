@@ -1,4 +1,11 @@
 from openai import OpenAI
+from pydantic import BaseModel
+
+
+class CopyDraft(BaseModel):
+    headline: str
+    body: str
+    cta: str
 
 
 def generate_copy(product_description):
@@ -27,22 +34,24 @@ Product information:
 
 Create one advertising draft.
 
-Return exactly these three sections:
-
-### Headline
-Write one clear headline.
-
-### Body
-Write one short advertising paragraph.
-
-### CTA
-Write one simple call to action.
+The headline should be clear.
+The body should be one short advertising paragraph.
+The CTA should be one simple call to action.
 """
 
-    response = client.responses.create(
+    response = client.responses.parse(
         model="gpt-6-luna",
-        instructions=instructions,
-        input=input_text
+        input=[
+            {
+                "role": "system",
+                "content": instructions
+            },
+            {
+                "role": "user",
+                "content": input_text
+            }
+        ],
+        text_format=CopyDraft
     )
 
-    return response.output_text
+    return response.output_parsed
