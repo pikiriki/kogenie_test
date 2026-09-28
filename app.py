@@ -4,11 +4,14 @@ import streamlit as st
 from dotenv import load_dotenv
 
 from copy_generator import generate_copy
-from database import initialize_database
+from database import initialize_database, save_campaign
 from models import CampaignBrief, CopyDraft
 
 load_dotenv()
 initialize_database()
+
+if "current_brief" not in st.session_state:
+    st.session_state.current_brief = None
 
 if "generated_copy" not in st.session_state:
     st.session_state.generated_copy = None
@@ -74,23 +77,15 @@ if generate_button:
             )
 
             try:
-                st.session_state.generated_copy = generate_copy(brief)
+                generated_copy = generate_copy(brief)
 
-                st.session_state.working_copy = (
-                    st.session_state.generated_copy
-                )
+                st.session_state.current_brief = brief
+                st.session_state.generated_copy = generated_copy
+                st.session_state.working_copy = generated_copy
 
-                st.session_state.edit_headline = (
-                    st.session_state.generated_copy.headline
-                )
-
-                st.session_state.edit_body = (
-                    st.session_state.generated_copy.body
-                )
-
-                st.session_state.edit_cta = (
-                    st.session_state.generated_copy.cta
-                )
+                st.session_state.edit_headline = generated_copy.headline
+                st.session_state.edit_body = generated_copy.body
+                st.session_state.edit_cta = generated_copy.cta
 
             except Exception:
                 st.error(
@@ -147,3 +142,15 @@ if st.session_state.generated_copy:
 
         st.markdown("### CTA")
         st.write(st.session_state.working_copy.cta)
+
+    save_campaign_button = st.button("Save Campaign")
+
+    if save_campaign_button:
+        campaign_id = save_campaign(
+            st.session_state.current_brief,
+            st.session_state.working_copy
+        )
+
+        st.success(
+            f"Campaign {campaign_id} saved."
+        )

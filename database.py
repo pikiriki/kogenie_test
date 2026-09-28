@@ -26,5 +26,43 @@ def initialize_database():
         """
     )
 
+def save_campaign(brief, draft):
+    connection = sqlite3.connect(DATABASE_NAME)
+
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        INSERT INTO campaigns (
+            product_description,
+            audience,
+            campaign_objective,
+            tone,
+            preferred_words,
+            avoided_words,
+            headline,
+            body,
+            cta
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            brief.product_description,
+            brief.audience,
+            brief.campaign_objective,
+            brief.tone,
+            brief.preferred_words,
+            brief.avoided_words,
+            draft.headline,
+            draft.body,
+            draft.cta
+        )
+    )
+
     connection.commit()
+
+    campaign_id = cursor.lastrowid
+
     connection.close()
+
+    return campaign_id
