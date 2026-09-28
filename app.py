@@ -2,6 +2,7 @@ import os
 
 import streamlit as st
 from dotenv import load_dotenv
+from openai import OpenAI
 
 load_dotenv()
 
@@ -23,7 +24,38 @@ else:
 
 if generate_button:
     if product_description:
-        st.write("Generating copy for:")
-        st.write(product_description)
+        if api_key:
+            client = OpenAI()
+
+            prompt = f"""
+Write one simple advertising draft for this product:
+
+{product_description}
+
+Return exactly these three sections:
+
+Headline:
+Body:
+CTA:
+
+Rules:
+- Keep the draft concise.
+- Do not invent statistics.
+- Do not invent testimonials.
+- Do not invent prices or guarantees.
+- Do not invent product capabilities.
+- Only use facts provided in the product description.
+"""
+
+            response = client.responses.create(
+                model="gpt-6-luna",
+                input=prompt
+            )
+
+            st.subheader("Generated Draft")
+            st.write(response.output_text)
+
+        else:
+            st.error("OpenAI API key is missing.")
     else:
         st.warning("Please describe your product first.")
