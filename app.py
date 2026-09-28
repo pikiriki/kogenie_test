@@ -18,14 +18,28 @@ product_description = st.text_area(
     placeholder="Example: An AI platform that helps marketers create and test ad campaigns."
 )
 
+audience = st.text_input(
+    "Who is this ad for?",
+    placeholder="Example: Ecommerce marketing managers"
+)
+
+campaign_objective = st.text_input(
+    "What should the reader do?",
+    placeholder="Example: Start a free trial"
+)
+
 generate_button = st.button("Generate Copy")
 
 api_key = os.getenv("OPENAI_API_KEY")
 
 if generate_button:
-    if product_description:
+    if product_description and audience and campaign_objective:
         if api_key:
-            generated_copy = generate_copy(product_description)
+            generated_copy = generate_copy(
+                product_description,
+                audience,
+                campaign_objective
+            )
 
             st.subheader("Generated Draft")
 
@@ -42,4 +56,6 @@ if generate_button:
             st.error("OpenAI API key is missing.")
 
     else:
-        st.warning("Please describe your product first.")
+        st.warning(
+            "Please provide the product, audience, and campaign objective."
+        )

@@ -8,13 +8,17 @@ class CopyDraft(BaseModel):
     cta: str
 
 
-def generate_copy(product_description):
+def generate_copy(
+    product_description,
+    audience,
+    campaign_objective
+):
     client = OpenAI()
 
     instructions = """
 You are a direct-response advertising copywriter.
 
-Your job is to communicate the product clearly and persuasively.
+Your job is to communicate the product clearly and persuasively to the specified audience.
 
 Follow these rules:
 - Use only facts supplied in the product information.
@@ -32,11 +36,19 @@ Product information:
 
 {product_description}
 
+Audience:
+
+{audience}
+
+Campaign objective:
+
+{campaign_objective}
+
 Create one advertising draft.
 
 The headline should be clear.
 The body should be one short advertising paragraph.
-The CTA should be one simple call to action.
+The CTA should support the campaign objective.
 """
 
     response = client.responses.parse(
