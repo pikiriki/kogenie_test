@@ -1,0 +1,15 @@
+# macOS
+.DS_Store
+
+# Secrets
+.env
+
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environment
+.venv/
+
+# Local application data
+*.db
