@@ -4,9 +4,11 @@ import streamlit as st
 from dotenv import load_dotenv
 
 from copy_generator import generate_copy
+from database import initialize_database
 from models import CampaignBrief, CopyDraft
 
 load_dotenv()
+initialize_database()
 
 if "generated_copy" not in st.session_state:
     st.session_state.generated_copy = None
