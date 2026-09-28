@@ -59,10 +59,33 @@ def save_campaign(brief, draft):
         )
     )
 
-    connection.commit()
+def get_campaigns():
+    connection = sqlite3.connect(DATABASE_NAME)
 
-    campaign_id = cursor.lastrowid
+    connection.row_factory = sqlite3.Row
+
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        SELECT
+            id,
+            product_description,
+            audience,
+            campaign_objective,
+            tone,
+            preferred_words,
+            avoided_words,
+            headline,
+            body,
+            cta
+        FROM campaigns
+        ORDER BY id DESC
+        """
+    )
+
+    campaigns = cursor.fetchall()
 
     connection.close()
 
-    return campaign_id
+    return campaigns
