@@ -11,7 +11,10 @@ class CopyDraft(BaseModel):
 def generate_copy(
     product_description,
     audience,
-    campaign_objective
+    campaign_objective,
+    tone,
+    preferred_words,
+    avoided_words
 ):
     client = OpenAI()
 
@@ -44,11 +47,26 @@ Campaign objective:
 
 {campaign_objective}
 
+Brand voice:
+
+Tone:
+{tone}
+
+Preferred vocabulary:
+{preferred_words}
+
+Avoid this vocabulary:
+{avoided_words}
+
 Create one advertising draft.
 
 The headline should be clear.
 The body should be one short advertising paragraph.
 The CTA should support the campaign objective.
+
+Use the brand voice naturally.
+Do not force preferred words where they do not fit.
+Do not use avoided words.
 """
 
     response = client.responses.parse(

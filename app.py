@@ -28,17 +28,40 @@ campaign_objective = st.text_input(
     placeholder="Example: Start a free trial"
 )
 
+tone = st.text_input(
+    "How should the brand sound?",
+    placeholder="Example: Clear, confident, and practical"
+)
+
+preferred_words = st.text_input(
+    "Words the brand likes to use",
+    placeholder="Example: performance, creative, testing"
+)
+
+avoided_words = st.text_input(
+    "Words the brand should avoid",
+    placeholder="Example: revolutionary, game-changing, magic"
+)
+
 generate_button = st.button("Generate Copy")
 
 api_key = os.getenv("OPENAI_API_KEY")
 
 if generate_button:
-    if product_description and audience and campaign_objective:
+    if (
+        product_description
+        and audience
+        and campaign_objective
+        and tone
+    ):
         if api_key:
             generated_copy = generate_copy(
                 product_description,
                 audience,
-                campaign_objective
+                campaign_objective,
+                tone,
+                preferred_words,
+                avoided_words
             )
 
             st.subheader("Generated Draft")
@@ -57,5 +80,5 @@ if generate_button:
 
     else:
         st.warning(
-            "Please provide the product, audience, and campaign objective."
+            "Please provide the product, audience, campaign objective, and tone."
         )
