@@ -1,21 +1,9 @@
 from openai import OpenAI
-from pydantic import BaseModel
+
+from models import CampaignBrief, CopyDraft
 
 
-class CopyDraft(BaseModel):
-    headline: str
-    body: str
-    cta: str
-
-
-def generate_copy(
-    product_description,
-    audience,
-    campaign_objective,
-    tone,
-    preferred_words,
-    avoided_words
-):
+def generate_copy(brief: CampaignBrief):
     client = OpenAI()
 
     instructions = """
@@ -37,26 +25,26 @@ Follow these rules:
     input_text = f"""
 Product information:
 
-{product_description}
+{brief.product_description}
 
 Audience:
 
-{audience}
+{brief.audience}
 
 Campaign objective:
 
-{campaign_objective}
+{brief.campaign_objective}
 
 Brand voice:
 
 Tone:
-{tone}
+{brief.tone}
 
 Preferred vocabulary:
-{preferred_words}
+{brief.preferred_words}
 
 Avoid this vocabulary:
-{avoided_words}
+{brief.avoided_words}
 
 Create one advertising draft.
 

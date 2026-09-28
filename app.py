@@ -4,6 +4,7 @@ import streamlit as st
 from dotenv import load_dotenv
 
 from copy_generator import generate_copy
+from models import CampaignBrief
 
 load_dotenv()
 
@@ -55,14 +56,16 @@ if generate_button:
         and tone
     ):
         if api_key:
-            generated_copy = generate_copy(
-                product_description,
-                audience,
-                campaign_objective,
-                tone,
-                preferred_words,
-                avoided_words
+            brief = CampaignBrief(
+                product_description=product_description,
+                audience=audience,
+                campaign_objective=campaign_objective,
+                tone=tone,
+                preferred_words=preferred_words,
+                avoided_words=avoided_words
             )
+
+            generated_copy = generate_copy(brief)
 
             st.subheader("Generated Draft")
 
