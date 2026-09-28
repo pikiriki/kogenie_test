@@ -57,14 +57,15 @@ if generate_button:
     ):
         if api_key:
             brief = CampaignBrief(
-                product_description=product_description,
-                audience=audience,
-                campaign_objective=campaign_objective,
-                tone=tone,
-                preferred_words=preferred_words,
-                avoided_words=avoided_words
-            )
+            product_description=product_description,
+            audience=audience,
+            campaign_objective=campaign_objective,
+            tone=tone,
+            preferred_words=preferred_words,
+            avoided_words=avoided_words
+        )
 
+        try:
             generated_copy = generate_copy(brief)
 
             st.subheader("Generated Draft")
@@ -78,10 +79,7 @@ if generate_button:
             st.markdown("### CTA")
             st.write(generated_copy.cta)
 
-        else:
-            st.error("OpenAI API key is missing.")
-
-    else:
-        st.warning(
-            "Please provide the product, audience, campaign objective, and tone."
-        )
+        except Exception:
+            st.error(
+                "Something went wrong while generating the copy. Please try again."
+            )
