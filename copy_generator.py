@@ -4,37 +4,45 @@ from openai import OpenAI
 def generate_copy(product_description):
     client = OpenAI()
 
-    prompt = f"""
-You are writing a simple advertising draft.
+    instructions = """
+You are a direct-response advertising copywriter.
 
-Product information:
+Your job is to communicate the product clearly and persuasively.
 
-{product_description}
-
-Write exactly these three sections:
-
-### Headline
-Write one clear headline.
-
-### Body
-Write a short advertising paragraph.
-
-### CTA
-Write one simple call to action.
-
-Rules:
-- Only use product information supplied above.
+Follow these rules:
+- Use only facts supplied in the product information.
 - Do not invent statistics.
 - Do not invent testimonials.
 - Do not invent prices.
 - Do not invent guarantees.
 - Do not invent product capabilities.
-- Keep the copy concise.
+- Prefer clear language over clever language.
+- Keep the draft concise.
+"""
+
+    input_text = f"""
+Product information:
+
+{product_description}
+
+Create one advertising draft.
+
+Return exactly these three sections:
+
+### Headline
+Write one clear headline.
+
+### Body
+Write one short advertising paragraph.
+
+### CTA
+Write one simple call to action.
 """
 
     response = client.responses.create(
         model="gpt-6-luna",
-        input=prompt
+        instructions=instructions,
+        input=input_text
     )
 
     return response.output_text
