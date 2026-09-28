@@ -4,12 +4,15 @@ import streamlit as st
 from dotenv import load_dotenv
 
 from copy_generator import generate_copy
-from models import CampaignBrief
+from models import CampaignBrief, CopyDraft
 
 load_dotenv()
 
 if "generated_copy" not in st.session_state:
     st.session_state.generated_copy = None
+
+if "working_copy" not in st.session_state:
+    st.session_state.working_copy = None
 
 st.title("KOgenie Copy Studio")
 
@@ -71,6 +74,22 @@ if generate_button:
             try:
                 st.session_state.generated_copy = generate_copy(brief)
 
+                st.session_state.working_copy = (
+                    st.session_state.generated_copy
+                )
+
+                st.session_state.edit_headline = (
+                    st.session_state.generated_copy.headline
+                )
+
+                st.session_state.edit_body = (
+                    st.session_state.generated_copy.body
+                )
+
+                st.session_state.edit_cta = (
+                    st.session_state.generated_copy.cta
+                )
+
             except Exception:
                 st.error(
                     "Something went wrong while generating the copy. Please try again."
@@ -85,13 +104,44 @@ if generate_button:
         )
 
 if st.session_state.generated_copy:
-    st.subheader("Generated Draft")
+    st.subheader("Working Draft")
 
-    st.markdown("### Headline")
-    st.write(st.session_state.generated_copy.headline)
+    st.text_input(
+        "Headline",
+        key="edit_headline"
+    )
 
-    st.markdown("### Body")
-    st.write(st.session_state.generated_copy.body)
+    st.text_area(
+        "Body",
+        key="edit_body",
+        height=150
+    )
 
-    st.markdown("### CTA")
-    st.write(st.session_state.generated_copy.cta)
+    st.text_input(
+        "CTA",
+        key="edit_cta"
+    )
+
+    apply_edits_button = st.button("Apply Edits")
+
+    if apply_edits_button:
+        st.session_state.working_copy = CopyDraft(
+            headline=st.session_state.edit_headline,
+            body=st.session_state.edit_body,
+            cta=st.session_state.edit_cta
+        )
+
+        st.success("Edits applied.")
+
+    if st.session_state.working_copy:
+        st.markdown("---")
+        st.subheader("Current Working Version")
+
+        st.markdown("### Headline")
+        st.write(st.session_state.working_copy.headline)
+
+        st.markdown("### Body")
+        st.write(st.session_state.working_copy.body)
+
+        st.markdown("### CTA")
+        st.write(st.session_state.working_copy.cta)

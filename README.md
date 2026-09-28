@@ -1,20 +1,42 @@
 # KOgenie Copy Studio
 
-A simple interface for an AI-assisted copywriting workflow.
+A simple browser interface for building an AI-assisted copywriting workflow.
 
-## First milestone
+## Current version
 
-Enter product details, click a button, and see one generated draft.
+Version 2 — Usable Mini Copywriter
 
-## Current progress
+## What the app currently does
 
-The project workspace has been created.
-Git has been initialized.
-No application code has been written yet.
+1. Accepts a product description.
+2. Accepts an audience.
+3. Accepts a campaign objective.
+4. Accepts basic brand voice information.
+5. Sends a structured campaign brief to an OpenAI model.
+6. Receives a structured copy draft containing:
+   - headline
+   - body
+   - CTA
+7. Keeps the generated draft across Streamlit reruns.
+8. Allows the human to edit the draft.
+9. Converts those edits back into a structured working draft.
+10. Handles ordinary generation failures with a user-friendly error.
 
-## Development approach
+## Current architecture
 
-Build one small feature at a time.
-Understand the code.
-Test the result.
-Save a Git checkpoint.
+```text
+Streamlit UI
+    ↓
+CampaignBrief
+    ↓
+generate_copy()
+    ↓
+OpenAI API
+    ↓
+CopyDraft
+    ↓
+Session State
+    ↓
+Human Editing
+    ↓
+Working CopyDraft
