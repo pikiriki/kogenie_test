@@ -8,6 +8,9 @@ from models import CampaignBrief
 
 load_dotenv()
 
+if "generated_copy" not in st.session_state:
+    st.session_state.generated_copy = None
+
 st.title("KOgenie Copy Studio")
 
 st.write(
@@ -57,29 +60,38 @@ if generate_button:
     ):
         if api_key:
             brief = CampaignBrief(
-            product_description=product_description,
-            audience=audience,
-            campaign_objective=campaign_objective,
-            tone=tone,
-            preferred_words=preferred_words,
-            avoided_words=avoided_words
+                product_description=product_description,
+                audience=audience,
+                campaign_objective=campaign_objective,
+                tone=tone,
+                preferred_words=preferred_words,
+                avoided_words=avoided_words
+            )
+
+            try:
+                st.session_state.generated_copy = generate_copy(brief)
+
+            except Exception:
+                st.error(
+                    "Something went wrong while generating the copy. Please try again."
+                )
+
+        else:
+            st.error("OpenAI API key is missing.")
+
+    else:
+        st.warning(
+            "Please provide the product, audience, campaign objective, and tone."
         )
 
-        try:
-            generated_copy = generate_copy(brief)
+if st.session_state.generated_copy:
+    st.subheader("Generated Draft")
 
-            st.subheader("Generated Draft")
+    st.markdown("### Headline")
+    st.write(st.session_state.generated_copy.headline)
 
-            st.markdown("### Headline")
-            st.write(generated_copy.headline)
+    st.markdown("### Body")
+    st.write(st.session_state.generated_copy.body)
 
-            st.markdown("### Body")
-            st.write(generated_copy.body)
-
-            st.markdown("### CTA")
-            st.write(generated_copy.cta)
-
-        except Exception:
-            st.error(
-                "Something went wrong while generating the copy. Please try again."
-            )
+    st.markdown("### CTA")
+    st.write(st.session_state.generated_copy.cta)
