@@ -8,6 +8,10 @@ load_dotenv()
 
 st.title("KOgenie Copy Studio")
 
+st.write(
+    "Describe a product and generate a simple advertising draft."
+)
+
 product_description = st.text_area(
     "Describe your product",
     placeholder="Example: An AI platform that helps marketers create and test ad campaigns."
@@ -17,34 +21,37 @@ generate_button = st.button("Generate Copy")
 
 api_key = os.getenv("OPENAI_API_KEY")
 
-if api_key:
-    st.success("OpenAI API key loaded.")
-else:
-    st.warning("OpenAI API key not found.")
-
 if generate_button:
     if product_description:
         if api_key:
             client = OpenAI()
 
             prompt = f"""
-Write one simple advertising draft for this product:
+You are writing a simple advertising draft.
+
+Product information:
 
 {product_description}
 
-Return exactly these three sections:
+Write exactly these three sections:
 
-Headline:
-Body:
-CTA:
+### Headline
+Write one clear headline.
+
+### Body
+Write a short advertising paragraph.
+
+### CTA
+Write one simple call to action.
 
 Rules:
-- Keep the draft concise.
+- Only use product information supplied above.
 - Do not invent statistics.
 - Do not invent testimonials.
-- Do not invent prices or guarantees.
+- Do not invent prices.
+- Do not invent guarantees.
 - Do not invent product capabilities.
-- Only use facts provided in the product description.
+- Keep the copy concise.
 """
 
             response = client.responses.create(
@@ -53,9 +60,11 @@ Rules:
             )
 
             st.subheader("Generated Draft")
-            st.write(response.output_text)
+
+            st.markdown(response.output_text)
 
         else:
             st.error("OpenAI API key is missing.")
+
     else:
         st.warning("Please describe your product first.")
