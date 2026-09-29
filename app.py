@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from copy_generator import generate_copy
 from database import (
     get_campaigns,
+    get_draft_versions,
     initialize_database,
     save_campaign,
     save_draft_version,
@@ -270,3 +271,40 @@ if st.session_state.generated_copy:
             st.success(
                 f"Version {version_number} saved."
             )
+
+if st.session_state.current_campaign_id is not None:
+    st.markdown("---")
+    st.subheader("Version History")
+
+    versions = get_draft_versions(
+        st.session_state.current_campaign_id
+    )
+
+    if versions:
+        version_options = {
+            f"Version {version['version_number']} — {version['created_at']}": version
+            for version in versions
+        }
+
+        selected_version_label = st.selectbox(
+            "Inspect a saved version",
+            version_options.keys()
+        )
+
+        selected_version = version_options[
+            selected_version_label
+        ]
+
+        st.markdown("### Historical Snapshot")
+
+        st.markdown("#### Headline")
+        st.write(selected_version["headline"])
+
+        st.markdown("#### Body")
+        st.write(selected_version["body"])
+
+        st.markdown("#### CTA")
+        st.write(selected_version["cta"])
+
+    else:
+        st.caption("No draft versions saved yet.")

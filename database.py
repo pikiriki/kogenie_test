@@ -180,3 +180,34 @@ def save_draft_version(campaign_id, draft):
     connection.close()
 
     return version_number
+
+
+def get_draft_versions(campaign_id):
+    connection = sqlite3.connect(DATABASE_NAME)
+
+    connection.row_factory = sqlite3.Row
+
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        SELECT
+            id,
+            campaign_id,
+            version_number,
+            headline,
+            body,
+            cta,
+            created_at
+        FROM draft_versions
+        WHERE campaign_id = ?
+        ORDER BY version_number DESC
+        """,
+        (campaign_id,)
+    )
+
+    versions = cursor.fetchall()
+
+    connection.close()
+
+    return versions
