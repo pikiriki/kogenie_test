@@ -22,3 +22,15 @@ class CopyDraft(BaseModel):
     headline: str
     body: str
     cta: str
+
+
+class CustomerEvidence(BaseModel):
+    exact_quote: str
+    source: str
+    problem: str
+    desired_outcome: str
+    interpretation: str
+
+
+class CustomerEvidenceReport(BaseModel):
+    evidence: list[CustomerEvidence]
