@@ -1,5 +1,7 @@
 import json
 
+from agents.decorators import tool
+
 from database import get_approved_claims
 
 
@@ -50,3 +52,18 @@ APPROVED_CLAIMS_TOOL = {
     },
     "strict": True,
 }
+
+
+@tool(name_override="get_approved_brand_claims")
+def approved_claims_agent_tool(
+    brand_profile_id: int
+) -> str:
+    """
+    Retrieve verified factual claims for a saved brand profile.
+
+    Args:
+        brand_profile_id: The database ID of the brand profile.
+    """
+    return get_approved_brand_claims(
+        brand_profile_id
+    )
