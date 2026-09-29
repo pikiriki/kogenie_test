@@ -35,11 +35,40 @@ def initialize_database():
             headline TEXT NOT NULL,
             body TEXT NOT NULL,
             cta TEXT NOT NULL,
+            source TEXT NOT NULL DEFAULT 'unknown',
+            note TEXT NOT NULL DEFAULT '',
             created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (campaign_id) REFERENCES campaigns(id)
         )
         """
     )
+
+    cursor.execute(
+        """
+        PRAGMA table_info(draft_versions)
+        """
+    )
+
+    existing_columns = {
+        row[1]
+        for row in cursor.fetchall()
+    }
+
+    if "source" not in existing_columns:
+        cursor.execute(
+            """
+            ALTER TABLE draft_versions
+            ADD COLUMN source TEXT NOT NULL DEFAULT 'unknown'
+            """
+        )
+
+    if "note" not in existing_columns:
+        cursor.execute(
+            """
+            ALTER TABLE draft_versions
+            ADD COLUMN note TEXT NOT NULL DEFAULT ''
+            """
+        )
 
     connection.commit()
     connection.close()
@@ -118,7 +147,12 @@ def get_campaigns():
     return campaigns
 
 
-def save_draft_version(campaign_id, draft):
+def save_draft_version(
+    campaign_id,
+    draft,
+    source,
+    note
+):
     connection = sqlite3.connect(DATABASE_NAME)
 
     cursor = connection.cursor()
@@ -146,16 +180,20 @@ def save_draft_version(campaign_id, draft):
             version_number,
             headline,
             body,
-            cta
+            cta,
+            source,
+            note
         )
-        VALUES (?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
         """,
         (
             campaign_id,
             version_number,
             draft.headline,
             draft.body,
-            draft.cta
+            draft.cta,
+            source,
+            note
         )
     )
 
@@ -198,6 +236,8 @@ def get_draft_versions(campaign_id):
             headline,
             body,
             cta,
+            source,
+            note,
             created_at
         FROM draft_versions
         WHERE campaign_id = ?

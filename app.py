@@ -29,6 +29,9 @@ if "working_copy" not in st.session_state:
 if "current_campaign_id" not in st.session_state:
     st.session_state.current_campaign_id = None
 
+if "working_copy_source" not in st.session_state:
+    st.session_state.working_copy_source = None
+
 saved_campaigns = get_campaigns()
 
 st.title("KOgenie Copy Studio")
@@ -74,6 +77,7 @@ if saved_campaigns:
 
         st.session_state.generated_copy = loaded_copy
         st.session_state.working_copy = loaded_copy
+        st.session_state.working_copy_source = None
 
         st.session_state.edit_headline = loaded_copy.headline
         st.session_state.edit_body = loaded_copy.body
@@ -178,6 +182,7 @@ if generate_button:
                 st.session_state.current_brief = brief
                 st.session_state.generated_copy = generated_copy
                 st.session_state.working_copy = generated_copy
+                st.session_state.working_copy_source = "ai"
 
                 st.session_state.edit_headline = generated_copy.headline
                 st.session_state.edit_body = generated_copy.body
@@ -223,6 +228,7 @@ if st.session_state.generated_copy:
             body=st.session_state.edit_body,
             cta=st.session_state.edit_cta
         )
+        st.session_state.working_copy_source = "human"
 
         st.success("Edits applied.")
 
@@ -239,6 +245,11 @@ if st.session_state.generated_copy:
         st.markdown("### CTA")
         st.write(st.session_state.working_copy.cta)
 
+    version_note = st.text_input(
+        "Version note",
+        placeholder="Example: Tightened headline and CTA"
+    )
+
     if st.session_state.current_campaign_id is None:
         save_button = st.button("Save Campaign")
 
@@ -250,14 +261,34 @@ if st.session_state.generated_copy:
 
             st.session_state.current_campaign_id = campaign_id
 
-            version_number = save_draft_version(
+            first_version = save_draft_version(
                 campaign_id,
-                st.session_state.working_copy
+                st.session_state.generated_copy,
+                "ai",
+                "Initial AI generation"
             )
 
-            st.success(
-                f"Campaign {campaign_id} saved as version {version_number}."
-            )
+            if (
+                st.session_state.working_copy
+                != st.session_state.generated_copy
+            ):
+                second_version = save_draft_version(
+                    campaign_id,
+                    st.session_state.working_copy,
+                    "human",
+                    version_note or "Human applied edits"
+                )
+
+                st.success(
+                    f"Campaign {campaign_id} saved with versions "
+                    f"{first_version} and {second_version}."
+                )
+
+            else:
+                st.success(
+                    f"Campaign {campaign_id} saved as version "
+                    f"{first_version}."
+                )
 
     else:
         save_version_button = st.button("Save New Version")
@@ -265,7 +296,9 @@ if st.session_state.generated_copy:
         if save_version_button:
             version_number = save_draft_version(
                 st.session_state.current_campaign_id,
-                st.session_state.working_copy
+                st.session_state.working_copy,
+                st.session_state.working_copy_source or "unknown",
+                version_note or "No note provided"
             )
 
             st.success(
@@ -282,7 +315,9 @@ if st.session_state.current_campaign_id is not None:
 
     if versions:
         version_options = {
-            f"Version {version['version_number']} — {version['created_at']}": version
+            f"Version {version['version_number']} — "
+            f"{version['source'].upper()} — "
+            f"{version['created_at']}": version
             for version in versions
         }
 
@@ -296,6 +331,15 @@ if st.session_state.current_campaign_id is not None:
         ]
 
         st.markdown("### Historical Snapshot")
+
+        st.write(
+            f"Source: {selected_version['source']}"
+        )
+
+        if selected_version["note"]:
+            st.write(
+                f"Note: {selected_version['note']}"
+            )
 
         st.markdown("#### Headline")
         st.write(selected_version["headline"])
