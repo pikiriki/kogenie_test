@@ -26,6 +26,25 @@ def initialize_database():
         """
     )
 
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS draft_versions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            campaign_id INTEGER NOT NULL,
+            version_number INTEGER NOT NULL,
+            headline TEXT NOT NULL,
+            body TEXT NOT NULL,
+            cta TEXT NOT NULL,
+            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (campaign_id) REFERENCES campaigns(id)
+        )
+        """
+    )
+
+    connection.commit()
+    connection.close()
+
+
 def save_campaign(brief, draft):
     connection = sqlite3.connect(DATABASE_NAME)
 
@@ -59,6 +78,14 @@ def save_campaign(brief, draft):
         )
     )
 
+    campaign_id = cursor.lastrowid
+
+    connection.commit()
+    connection.close()
+
+    return campaign_id
+
+
 def get_campaigns():
     connection = sqlite3.connect(DATABASE_NAME)
 
@@ -89,3 +116,67 @@ def get_campaigns():
     connection.close()
 
     return campaigns
+
+
+def save_draft_version(campaign_id, draft):
+    connection = sqlite3.connect(DATABASE_NAME)
+
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        SELECT MAX(version_number)
+        FROM draft_versions
+        WHERE campaign_id = ?
+        """,
+        (campaign_id,)
+    )
+
+    last_version = cursor.fetchone()[0]
+
+    if last_version is None:
+        version_number = 1
+    else:
+        version_number = last_version + 1
+
+    cursor.execute(
+        """
+        INSERT INTO draft_versions (
+            campaign_id,
+            version_number,
+            headline,
+            body,
+            cta
+        )
+        VALUES (?, ?, ?, ?, ?)
+        """,
+        (
+            campaign_id,
+            version_number,
+            draft.headline,
+            draft.body,
+            draft.cta
+        )
+    )
+
+    cursor.execute(
+        """
+        UPDATE campaigns
+        SET
+            headline = ?,
+            body = ?,
+            cta = ?
+        WHERE id = ?
+        """,
+        (
+            draft.headline,
+            draft.body,
+            draft.cta,
+            campaign_id
+        )
+    )
+
+    connection.commit()
+    connection.close()
+
+    return version_number

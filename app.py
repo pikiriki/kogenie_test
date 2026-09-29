@@ -8,6 +8,7 @@ from database import (
     get_campaigns,
     initialize_database,
     save_campaign,
+    save_draft_version,
 )
 
 from models import CampaignBrief, CopyDraft
@@ -23,6 +24,9 @@ if "generated_copy" not in st.session_state:
 
 if "working_copy" not in st.session_state:
     st.session_state.working_copy = None
+
+if "current_campaign_id" not in st.session_state:
+    st.session_state.current_campaign_id = None
 
 saved_campaigns = get_campaigns()
 
@@ -47,6 +51,10 @@ if saved_campaigns:
         selected_campaign = campaign_options[
             selected_campaign_label
         ]
+
+        st.session_state.current_campaign_id = (
+            selected_campaign["id"]
+        )
 
         st.session_state.current_brief = CampaignBrief(
             product_description=selected_campaign["product_description"],
@@ -165,6 +173,7 @@ if generate_button:
             try:
                 generated_copy = generate_copy(brief)
 
+                st.session_state.current_campaign_id = None
                 st.session_state.current_brief = brief
                 st.session_state.generated_copy = generated_copy
                 st.session_state.working_copy = generated_copy
@@ -229,14 +238,35 @@ if st.session_state.generated_copy:
         st.markdown("### CTA")
         st.write(st.session_state.working_copy.cta)
 
-    save_campaign_button = st.button("Save Campaign")
+    if st.session_state.current_campaign_id is None:
+        save_button = st.button("Save Campaign")
 
-    if save_campaign_button:
-        campaign_id = save_campaign(
-            st.session_state.current_brief,
-            st.session_state.working_copy
-        )
+        if save_button:
+            campaign_id = save_campaign(
+                st.session_state.current_brief,
+                st.session_state.working_copy
+            )
 
-        st.success(
-            f"Campaign {campaign_id} saved."
-        )
+            st.session_state.current_campaign_id = campaign_id
+
+            version_number = save_draft_version(
+                campaign_id,
+                st.session_state.working_copy
+            )
+
+            st.success(
+                f"Campaign {campaign_id} saved as version {version_number}."
+            )
+
+    else:
+        save_version_button = st.button("Save New Version")
+
+        if save_version_button:
+            version_number = save_draft_version(
+                st.session_state.current_campaign_id,
+                st.session_state.working_copy
+            )
+
+            st.success(
+                f"Version {version_number} saved."
+            )
