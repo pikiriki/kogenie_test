@@ -13,3 +13,6 @@ __pycache__/
 
 # Local application data
 *.db
+
+# Private research material
+knowledge/
