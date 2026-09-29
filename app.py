@@ -5,10 +5,12 @@ from dotenv import load_dotenv
 
 from copy_generator import generate_copy
 from database import (
+    get_approved_claims,
     get_brand_profiles,
     get_campaigns,
     get_draft_versions,
     initialize_database,
+    save_approved_claim,
     save_brand_profile,
     save_campaign,
     save_draft_version,
@@ -136,7 +138,8 @@ if saved_campaigns:
             campaign_objective=selected_campaign["campaign_objective"],
             tone=selected_campaign["tone"],
             preferred_words=selected_campaign["preferred_words"] or "",
-            avoided_words=selected_campaign["avoided_words"] or ""
+            avoided_words=selected_campaign["avoided_words"] or "",
+            approved_claims=[]
         )
 
         loaded_copy = CopyDraft(
@@ -225,6 +228,8 @@ if selected_brand_profile is None:
         key="input_avoided_words"
     )
 
+    approved_claims = []
+
 else:
     selected_brand = BrandProfile(
         name=selected_brand_profile["name"],
@@ -257,6 +262,49 @@ else:
             f"Avoid: {avoided_words}"
         )
 
+    st.markdown("#### Approved Claims")
+
+    new_claim = st.text_input(
+        "Add an approved claim",
+        placeholder="Example: Turns one campaign brief into multiple creative concepts.",
+        key="new_approved_claim"
+    )
+
+    add_claim_button = st.button(
+        "Add Approved Claim"
+    )
+
+    if add_claim_button:
+        if new_claim:
+            save_approved_claim(
+                selected_brand_profile["id"],
+                new_claim
+            )
+
+            st.success("Approved claim saved.")
+
+        else:
+            st.warning(
+                "Please enter a claim first."
+            )
+
+    approved_claim_rows = get_approved_claims(
+        selected_brand_profile["id"]
+    )
+
+    approved_claims = [
+        claim["claim_text"]
+        for claim in approved_claim_rows
+    ]
+
+    if approved_claims:
+        for claim in approved_claims:
+            st.write(f"✅ {claim}")
+    else:
+        st.caption(
+            "No approved claims saved for this brand yet."
+        )
+
 generate_button = st.button("Generate Copy")
 
 api_key = os.getenv("OPENAI_API_KEY")
@@ -275,7 +323,8 @@ if generate_button:
                 campaign_objective=campaign_objective,
                 tone=tone,
                 preferred_words=preferred_words,
-                avoided_words=avoided_words
+                avoided_words=avoided_words,
+                approved_claims=approved_claims
             )
 
             try:

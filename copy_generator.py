@@ -12,7 +12,9 @@ You are a direct-response advertising copywriter.
 Your job is to communicate the product clearly and persuasively to the specified audience.
 
 Follow these rules:
-- Use only facts supplied in the product information.
+- Use only facts supplied in the product information and approved claims.
+- Treat approved claims as the factual claims you are explicitly permitted to state.
+- Do not create additional factual performance claims that are not supported by the supplied information.
 - Do not invent statistics.
 - Do not invent testimonials.
 - Do not invent prices.
@@ -21,6 +23,11 @@ Follow these rules:
 - Prefer clear language over clever language.
 - Keep the draft concise.
 """
+
+    approved_claims_text = "\n".join(
+        f"- {claim}"
+        for claim in brief.approved_claims
+    )
 
     input_text = f"""
 Product information:
@@ -45,6 +52,10 @@ Preferred vocabulary:
 
 Avoid this vocabulary:
 {brief.avoided_words}
+
+Approved factual claims:
+
+{approved_claims_text if approved_claims_text else "No approved claims provided."}
 
 Create one advertising draft.
 

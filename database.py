@@ -40,6 +40,19 @@ def initialize_database():
 
     cursor.execute(
         """
+        CREATE TABLE IF NOT EXISTS approved_claims (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            brand_profile_id INTEGER NOT NULL,
+            claim_text TEXT NOT NULL,
+            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (brand_profile_id) REFERENCES brand_profiles(id),
+            UNIQUE (brand_profile_id, claim_text)
+        )
+        """
+    )
+
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS draft_versions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             campaign_id INTEGER NOT NULL,
@@ -321,3 +334,56 @@ def get_brand_profiles():
     connection.close()
 
     return profiles
+
+
+def save_approved_claim(
+    brand_profile_id,
+    claim_text
+):
+    connection = sqlite3.connect(DATABASE_NAME)
+
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        INSERT OR IGNORE INTO approved_claims (
+            brand_profile_id,
+            claim_text
+        )
+        VALUES (?, ?)
+        """,
+        (
+            brand_profile_id,
+            claim_text
+        )
+    )
+
+    connection.commit()
+    connection.close()
+
+
+def get_approved_claims(brand_profile_id):
+    connection = sqlite3.connect(DATABASE_NAME)
+
+    connection.row_factory = sqlite3.Row
+
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        SELECT
+            id,
+            claim_text,
+            created_at
+        FROM approved_claims
+        WHERE brand_profile_id = ?
+        ORDER BY id
+        """,
+        (brand_profile_id,)
+    )
+
+    claims = cursor.fetchall()
+
+    connection.close()
+
+    return claims

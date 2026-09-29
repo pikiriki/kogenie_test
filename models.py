@@ -15,6 +15,7 @@ class CampaignBrief(BaseModel):
     tone: str
     preferred_words: str
     avoided_words: str
+    approved_claims: list[str]
 
 
 class CopyDraft(BaseModel):
