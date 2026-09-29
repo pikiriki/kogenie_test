@@ -28,6 +28,18 @@ def initialize_database():
 
     cursor.execute(
         """
+        CREATE TABLE IF NOT EXISTS brand_profiles (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL UNIQUE,
+            tone TEXT NOT NULL,
+            preferred_words TEXT NOT NULL DEFAULT '',
+            avoided_words TEXT NOT NULL DEFAULT ''
+        )
+        """
+    )
+
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS draft_versions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             campaign_id INTEGER NOT NULL,
@@ -251,3 +263,61 @@ def get_draft_versions(campaign_id):
     connection.close()
 
     return versions
+
+
+def save_brand_profile(profile):
+    connection = sqlite3.connect(DATABASE_NAME)
+
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        INSERT INTO brand_profiles (
+            name,
+            tone,
+            preferred_words,
+            avoided_words
+        )
+        VALUES (?, ?, ?, ?)
+        ON CONFLICT(name) DO UPDATE SET
+            tone = excluded.tone,
+            preferred_words = excluded.preferred_words,
+            avoided_words = excluded.avoided_words
+        """,
+        (
+            profile.name,
+            profile.tone,
+            profile.preferred_words,
+            profile.avoided_words
+        )
+    )
+
+    connection.commit()
+    connection.close()
+
+
+def get_brand_profiles():
+    connection = sqlite3.connect(DATABASE_NAME)
+
+    connection.row_factory = sqlite3.Row
+
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        SELECT
+            id,
+            name,
+            tone,
+            preferred_words,
+            avoided_words
+        FROM brand_profiles
+        ORDER BY name
+        """
+    )
+
+    profiles = cursor.fetchall()
+
+    connection.close()
+
+    return profiles

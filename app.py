@@ -5,14 +5,16 @@ from dotenv import load_dotenv
 
 from copy_generator import generate_copy
 from database import (
+    get_brand_profiles,
     get_campaigns,
     get_draft_versions,
     initialize_database,
+    save_brand_profile,
     save_campaign,
     save_draft_version,
 )
 
-from models import CampaignBrief, CopyDraft
+from models import BrandProfile, CampaignBrief, CopyDraft
 
 load_dotenv()
 initialize_database()
@@ -35,6 +37,74 @@ if "working_copy_source" not in st.session_state:
 saved_campaigns = get_campaigns()
 
 st.title("KOgenie Copy Studio")
+
+st.subheader("Brand Profiles")
+
+new_brand_name = st.text_input(
+    "Brand name",
+    key="new_brand_name",
+    placeholder="Example: KOgenie"
+)
+
+new_brand_tone = st.text_input(
+    "Brand tone",
+    key="new_brand_tone",
+    placeholder="Example: Clear, confident, and practical"
+)
+
+new_brand_preferred_words = st.text_input(
+    "Preferred words",
+    key="new_brand_preferred_words",
+    placeholder="Example: performance, creative, testing"
+)
+
+new_brand_avoided_words = st.text_input(
+    "Words to avoid",
+    key="new_brand_avoided_words",
+    placeholder="Example: revolutionary, magic, effortless"
+)
+
+save_brand_profile_button = st.button(
+    "Save Brand Profile"
+)
+
+if save_brand_profile_button:
+    if new_brand_name and new_brand_tone:
+        profile = BrandProfile(
+            name=new_brand_name,
+            tone=new_brand_tone,
+            preferred_words=new_brand_preferred_words,
+            avoided_words=new_brand_avoided_words
+        )
+
+        save_brand_profile(profile)
+
+        st.success(
+            f"Brand profile '{profile.name}' saved."
+        )
+
+    else:
+        st.warning(
+            "Please provide at least a brand name and tone."
+        )
+
+saved_brand_profiles = get_brand_profiles()
+
+brand_options = {
+    "Manual brand voice": None
+}
+
+for profile in saved_brand_profiles:
+    brand_options[profile["name"]] = profile
+
+selected_brand_name = st.selectbox(
+    "Brand for this campaign",
+    brand_options.keys()
+)
+
+selected_brand_profile = brand_options[
+    selected_brand_name
+]
 
 st.subheader("Saved Campaigns")
 
@@ -136,23 +206,56 @@ campaign_objective = st.text_input(
     key="input_objective"
 )
 
-tone = st.text_input(
-    "How should the brand sound?",
-    placeholder="Example: Clear, confident, and practical",
-    key="input_tone"
-)
+if selected_brand_profile is None:
+    tone = st.text_input(
+        "How should the brand sound?",
+        placeholder="Example: Clear, confident, and practical",
+        key="input_tone"
+    )
 
-preferred_words = st.text_input(
-    "Words the brand likes to use",
-    placeholder="Example: performance, creative, testing",
-    key="input_preferred_words"
-)
+    preferred_words = st.text_input(
+        "Words the brand likes to use",
+        placeholder="Example: performance, creative, testing",
+        key="input_preferred_words"
+    )
 
-avoided_words = st.text_input(
-    "Words the brand should avoid",
-    placeholder="Example: revolutionary, game-changing, magic",
-    key="input_avoided_words"
-)
+    avoided_words = st.text_input(
+        "Words the brand should avoid",
+        placeholder="Example: revolutionary, game-changing, magic",
+        key="input_avoided_words"
+    )
+
+else:
+    selected_brand = BrandProfile(
+        name=selected_brand_profile["name"],
+        tone=selected_brand_profile["tone"],
+        preferred_words=(
+            selected_brand_profile["preferred_words"] or ""
+        ),
+        avoided_words=(
+            selected_brand_profile["avoided_words"] or ""
+        )
+    )
+
+    tone = selected_brand.tone
+    preferred_words = selected_brand.preferred_words
+    avoided_words = selected_brand.avoided_words
+
+    st.caption(
+        f"Using saved voice for {selected_brand.name}"
+    )
+
+    st.write(f"Tone: {tone}")
+
+    if preferred_words:
+        st.write(
+            f"Preferred words: {preferred_words}"
+        )
+
+    if avoided_words:
+        st.write(
+            f"Avoid: {avoided_words}"
+        )
 
 generate_button = st.button("Generate Copy")
 
