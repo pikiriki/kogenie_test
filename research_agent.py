@@ -1,3 +1,4 @@
+import json
 import os
 
 from dotenv import load_dotenv
@@ -9,10 +10,14 @@ from agents import (
     WebSearchTool,
 )
 
-from agent_tools import approved_claims_agent_tool
+from agent_tools import (
+    approved_claims_agent_tool,
+    get_approved_brand_claims,
+)
 from models import (
     CompetitorMessageMap,
     CustomerEvidenceReport,
+    ResearchDocument,
 )
 
 
@@ -313,6 +318,55 @@ is created.
     return result.final_output
 
 
+research_document_agent = Agent(
+    name="Research Document Synthesizer",
+
+    instructions="""
+You synthesize already-collected copywriting research
+into one structured ResearchDocument.
+
+You are NOT doing new research in this step.
+
+You will receive:
+- product/document research
+- verified internal claims
+- customer evidence
+- competitor messaging observations
+
+Your job is to organize and summarize that evidence.
+
+CRITICAL RULES:
+
+- Do not invent facts.
+- Do not invent customer quotations.
+- Preserve CustomerEvidence objects faithfully.
+- Preserve CompetitorMessage objects faithfully.
+- Treat competitor claims as observed competitor messaging,
+  not verified facts about our product.
+- Treat customer interpretations as analysis,
+  not direct quotations.
+- product_facts must only contain facts supported by the
+  supplied product research or verified internal claims.
+- approved_claims must contain only supplied verified claims.
+- If evidence is missing, record the gap explicitly.
+- Create unanswered questions instead of guessing.
+
+Do NOT decide:
+- awareness level
+- market sophistication stage
+- copy angle
+- offer
+- positioning strategy
+
+Those belong to a later strategy stage.
+""",
+
+    model="gpt-6-luna",
+
+    output_type=ResearchDocument,
+)
+
+
 def research_verified_brand_claims(
     brand_profile_id: int
 ) -> str:
@@ -386,3 +440,98 @@ Preserve file citations when available.
     )
 
     return result
+
+
+def build_research_document(
+    brand_profile_id: int,
+    competitors: list[str],
+) -> ResearchDocument:
+
+    product_research_result = research_uploaded_documents(
+        (
+            "What documented product capabilities, "
+            "limitations, and factual product information "
+            "are available?"
+        )
+    )
+
+    product_research = (
+        product_research_result.final_output
+    )
+
+    customer_report = extract_customer_evidence(
+        (
+            "What problems, frustrations, and desired "
+            "outcomes do customers express about creating "
+            "fresh advertising ideas?"
+        )
+    )
+
+    competitor_map = research_competitor_messages(
+        competitors
+    )
+
+    approved_claims_json = (
+        get_approved_brand_claims(
+            brand_profile_id
+        )
+    )
+
+    approved_claim_records = json.loads(
+        approved_claims_json
+    )
+
+    approved_claims = [
+        claim["claim_text"]
+        for claim in approved_claim_records
+    ]
+
+    synthesis_input = f"""
+PRODUCT RESEARCH:
+
+{product_research}
+
+
+VERIFIED APPROVED CLAIMS:
+
+{json.dumps(
+    approved_claims,
+    indent=2
+)}
+
+
+CUSTOMER EVIDENCE:
+
+{customer_report.model_dump_json(
+    indent=2
+)}
+
+
+COMPETITOR MESSAGE MAP:
+
+{competitor_map.model_dump_json(
+    indent=2
+)}
+
+
+Create the ResearchDocument from ONLY the evidence above.
+
+For problems and desired outcomes:
+- synthesize recurring patterns
+- do not present your summaries as direct quotes
+
+For evidence_gaps:
+- explicitly state important things the supplied evidence
+  does not establish
+
+For unanswered_questions:
+- identify what should be researched before strategy
+  decisions are made
+"""
+
+    result = Runner.run_sync(
+        research_document_agent,
+        synthesis_input
+    )
+
+    return result.final_output

@@ -47,3 +47,14 @@ class CompetitorMessage(BaseModel):
 
 class CompetitorMessageMap(BaseModel):
     messages: list[CompetitorMessage]
+
+
+class ResearchDocument(BaseModel):
+    product_facts: list[str]
+    approved_claims: list[str]
+    customer_evidence: list[CustomerEvidence]
+    problems: list[str]
+    desired_outcomes: list[str]
+    competitor_messages: list[CompetitorMessage]
+    evidence_gaps: list[str]
+    unanswered_questions: list[str]
