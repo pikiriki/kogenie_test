@@ -4,23 +4,21 @@ A simple browser interface for building an AI-assisted copywriting workflow.
 
 ## Current version
 
-Version 2 — Usable Mini Copywriter
+Version 3 — Persistent Campaign Workspace
 
 ## What the app currently does
 
-1. Accepts a product description.
-2. Accepts an audience.
-3. Accepts a campaign objective.
-4. Accepts basic brand voice information.
-5. Sends a structured campaign brief to an OpenAI model.
-6. Receives a structured copy draft containing:
-   - headline
-   - body
-   - CTA
-7. Keeps the generated draft across Streamlit reruns.
-8. Allows the human to edit the draft.
-9. Converts those edits back into a structured working draft.
-10. Handles ordinary generation failures with a user-friendly error.
+- Creates structured campaign briefs.
+- Generates structured AI copy drafts.
+- Lets humans edit and apply changes.
+- Stores campaigns in SQLite.
+- Reloads saved campaigns.
+- Maintains draft version history.
+- Records version provenance and notes.
+- Stores reusable brand profiles.
+- Stores claims, evidence, sources, and verification status.
+- Sends only verified claims to the writer.
+- Exports a complete campaign record as JSON.
 
 ## Current architecture
 
@@ -40,3 +38,11 @@ Session State
 Human Editing
     ↓
 Working CopyDraft
+```
+
+## Current limitation
+
+The system still relies on humans to enter research, claims, evidence,
+and brand knowledge manually.
+
+The next version begins adding tool-using AI research capabilities.

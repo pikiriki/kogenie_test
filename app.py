@@ -4,6 +4,7 @@ import streamlit as st
 from dotenv import load_dotenv
 
 from copy_generator import generate_copy
+from exporter import create_campaign_export
 from database import (
     get_approved_claims,
     get_brand_profiles,
@@ -564,3 +565,33 @@ if st.session_state.current_campaign_id is not None:
 
     else:
         st.caption("No draft versions saved yet.")
+
+if (
+    st.session_state.current_campaign_id is not None
+    and st.session_state.current_brief
+    and st.session_state.working_copy
+):
+    st.markdown("---")
+    st.subheader("Export Campaign")
+
+    export_versions = get_draft_versions(
+        st.session_state.current_campaign_id
+    )
+
+    campaign_export = create_campaign_export(
+        st.session_state.current_campaign_id,
+        st.session_state.current_brief,
+        st.session_state.working_copy,
+        export_versions
+    )
+
+    st.download_button(
+        label="Download Campaign JSON",
+        data=campaign_export,
+        file_name=(
+            f"campaign_"
+            f"{st.session_state.current_campaign_id}"
+            f"_export.json"
+        ),
+        mime="application/json"
+    )
