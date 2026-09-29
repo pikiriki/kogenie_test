@@ -34,3 +34,16 @@ class CustomerEvidence(BaseModel):
 
 class CustomerEvidenceReport(BaseModel):
     evidence: list[CustomerEvidence]
+
+
+class CompetitorMessage(BaseModel):
+    competitor: str
+    observed_claim: str
+    mechanism: str
+    audience: str
+    offer_or_cta: str
+    source: str
+
+
+class CompetitorMessageMap(BaseModel):
+    messages: list[CompetitorMessage]
