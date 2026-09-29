@@ -270,6 +270,32 @@ else:
         key="new_approved_claim"
     )
 
+    claim_evidence = st.text_area(
+        "Evidence for this claim",
+        placeholder=(
+            "Example: Confirmed in the product specification "
+            "and demonstrated in the current application."
+        ),
+        key="new_claim_evidence"
+    )
+
+    claim_source = st.text_input(
+        "Source reference",
+        placeholder=(
+            "Example: Product specification v1, section 3"
+        ),
+        key="new_claim_source"
+    )
+
+    claim_status = st.selectbox(
+        "Verification status",
+        [
+            "unverified",
+            "verified"
+        ],
+        key="new_claim_status"
+    )
+
     add_claim_button = st.button(
         "Add Approved Claim"
     )
@@ -278,10 +304,15 @@ else:
         if new_claim:
             save_approved_claim(
                 selected_brand_profile["id"],
-                new_claim
+                new_claim,
+                claim_evidence,
+                claim_source,
+                claim_status
             )
 
-            st.success("Approved claim saved.")
+            st.success(
+                f"Claim saved with status: {claim_status}."
+            )
 
         else:
             st.warning(
@@ -292,17 +323,46 @@ else:
         selected_brand_profile["id"]
     )
 
-    approved_claims = [
+    verified_claims = [
         claim["claim_text"]
         for claim in approved_claim_rows
+        if claim["verification_status"] == "verified"
     ]
 
-    if approved_claims:
-        for claim in approved_claims:
-            st.write(f"✅ {claim}")
+    approved_claims = verified_claims
+
+    if approved_claim_rows:
+        for claim in approved_claim_rows:
+            status = claim["verification_status"]
+
+            if status == "verified":
+                st.write(
+                    f"✅ {claim['claim_text']}"
+                )
+            else:
+                st.write(
+                    f"⚠️ {claim['claim_text']}"
+                )
+
+            st.caption(
+                f"Status: {status}"
+            )
+
+            if claim["evidence_note"]:
+                st.caption(
+                    f"Evidence: {claim['evidence_note']}"
+                )
+
+            if claim["source_reference"]:
+                st.caption(
+                    f"Source: {claim['source_reference']}"
+                )
+
+            st.markdown("---")
+
     else:
         st.caption(
-            "No approved claims saved for this brand yet."
+            "No claims saved for this brand yet."
         )
 
 generate_button = st.button("Generate Copy")

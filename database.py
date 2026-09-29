@@ -44,12 +44,50 @@ def initialize_database():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             brand_profile_id INTEGER NOT NULL,
             claim_text TEXT NOT NULL,
+            evidence_note TEXT NOT NULL DEFAULT '',
+            source_reference TEXT NOT NULL DEFAULT '',
+            verification_status TEXT NOT NULL DEFAULT 'unverified',
             created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (brand_profile_id) REFERENCES brand_profiles(id),
             UNIQUE (brand_profile_id, claim_text)
         )
         """
     )
+
+    cursor.execute(
+        """
+        PRAGMA table_info(approved_claims)
+        """
+    )
+
+    approved_claim_columns = {
+        row[1]
+        for row in cursor.fetchall()
+    }
+
+    if "evidence_note" not in approved_claim_columns:
+        cursor.execute(
+            """
+            ALTER TABLE approved_claims
+            ADD COLUMN evidence_note TEXT NOT NULL DEFAULT ''
+            """
+        )
+
+    if "source_reference" not in approved_claim_columns:
+        cursor.execute(
+            """
+            ALTER TABLE approved_claims
+            ADD COLUMN source_reference TEXT NOT NULL DEFAULT ''
+            """
+        )
+
+    if "verification_status" not in approved_claim_columns:
+        cursor.execute(
+            """
+            ALTER TABLE approved_claims
+            ADD COLUMN verification_status TEXT NOT NULL DEFAULT 'unverified'
+            """
+        )
 
     cursor.execute(
         """
@@ -338,7 +376,10 @@ def get_brand_profiles():
 
 def save_approved_claim(
     brand_profile_id,
-    claim_text
+    claim_text,
+    evidence_note,
+    source_reference,
+    verification_status
 ):
     connection = sqlite3.connect(DATABASE_NAME)
 
@@ -346,15 +387,26 @@ def save_approved_claim(
 
     cursor.execute(
         """
-        INSERT OR IGNORE INTO approved_claims (
+        INSERT INTO approved_claims (
             brand_profile_id,
-            claim_text
+            claim_text,
+            evidence_note,
+            source_reference,
+            verification_status
         )
-        VALUES (?, ?)
+        VALUES (?, ?, ?, ?, ?)
+        ON CONFLICT(brand_profile_id, claim_text)
+        DO UPDATE SET
+            evidence_note = excluded.evidence_note,
+            source_reference = excluded.source_reference,
+            verification_status = excluded.verification_status
         """,
         (
             brand_profile_id,
-            claim_text
+            claim_text,
+            evidence_note,
+            source_reference,
+            verification_status
         )
     )
 
@@ -374,6 +426,9 @@ def get_approved_claims(brand_profile_id):
         SELECT
             id,
             claim_text,
+            evidence_note,
+            source_reference,
+            verification_status,
             created_at
         FROM approved_claims
         WHERE brand_profile_id = ?
