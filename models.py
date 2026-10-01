@@ -58,3 +58,10 @@ class ResearchDocument(BaseModel):
     competitor_messages: list[CompetitorMessage]
     evidence_gaps: list[str]
     unanswered_questions: list[str]
+
+
+class ReaderProfile(BaseModel):
+    who_they_are: str
+    current_situation: str
+    primary_problem: str
+    desired_outcome: str
