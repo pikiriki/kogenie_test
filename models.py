@@ -80,3 +80,11 @@ class DesireIntensity(BaseModel):
     evidence: list[str]
     urgency_signals: list[str]
     uncertainty: str
+
+
+class AwarenessHypothesis(BaseModel):
+    level: str
+    what_the_reader_knows: list[str]
+    what_the_reader_does_not_yet_know: list[str]
+    supporting_evidence: list[str]
+    confidence: str

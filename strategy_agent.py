@@ -1,6 +1,7 @@
 from agents import Agent, Runner
 
 from models import (
+    AwarenessHypothesis,
     DesireHypothesis,
     DesireIntensity,
     ReaderProfile,
@@ -175,6 +176,80 @@ Do not:
 )
 
 
+awareness_strategy_agent = Agent(
+    name="Awareness Strategy Agent",
+
+    instructions="""
+You are the Awareness Strategy Agent for KOgenie Copy Studio.
+
+You receive:
+- a ResearchDocument
+- a ReaderProfile
+- a DesireHypothesis
+- a DesireIntensity assessment
+
+Your job is to estimate the reader's awareness level
+before they encounter the advertisement.
+
+Use exactly one of these levels:
+
+unaware
+problem aware
+solution aware
+product aware
+most aware
+
+Interpret them as follows:
+
+unaware
+= the evidence does not show that the reader recognizes
+  the relevant problem yet
+
+problem aware
+= the reader recognizes the problem, but the evidence
+  does not show that they understand the relevant
+  solution category
+
+solution aware
+= the reader knows solutions to the problem exist,
+  but does not yet appear familiar enough with this
+  specific product
+
+product aware
+= the reader appears to know this product or its
+  capabilities, but still needs a reason to act
+
+most aware
+= the reader already understands the product and
+  core benefit; the main remaining issue is the offer,
+  timing, or action
+
+Rules:
+
+- Base the classification only on supplied evidence.
+- Do not assume product awareness merely because the
+  product exists in the ResearchDocument.
+- Research available to us is not automatically knowledge
+  possessed by the reader.
+- Distinguish what WE know from what THE READER knows.
+- Record evidence supporting the classification.
+- Explicitly state what the reader does not yet appear to know.
+- Use confidence: high, medium, or low.
+- If the evidence cannot establish the level strongly,
+  choose the most defensible level and lower confidence.
+
+Do not:
+- choose the final copy angle
+- classify market sophistication
+- write the advertisement
+""",
+
+    model="gpt-6-luna",
+
+    output_type=AwarenessHypothesis,
+)
+
+
 def build_reader_profile(
     research_document: ResearchDocument
 ) -> ReaderProfile:
@@ -280,6 +355,48 @@ urgent need
 
 Do not reward dramatic language.
 Reward evidence.
+"""
+    )
+
+    return result.final_output
+
+
+def estimate_awareness(
+    research_document: ResearchDocument,
+    reader_profile: ReaderProfile,
+    desire_hypothesis: DesireHypothesis,
+    desire_intensity: DesireIntensity,
+) -> AwarenessHypothesis:
+
+    result = Runner.run_sync(
+        awareness_strategy_agent,
+        f"""
+Here is the ResearchDocument:
+
+{research_document.model_dump_json(indent=2)}
+
+Here is the ReaderProfile:
+
+{reader_profile.model_dump_json(indent=2)}
+
+Here is the DesireHypothesis:
+
+{desire_hypothesis.model_dump_json(indent=2)}
+
+Here is the DesireIntensity assessment:
+
+{desire_intensity.model_dump_json(indent=2)}
+
+Estimate the reader's awareness level.
+
+Focus specifically on:
+
+What does the evidence show the reader already understands?
+
+What does the evidence NOT show they understand yet?
+
+Do not confuse information in our research database with
+knowledge possessed by the reader.
 """
     )
 
