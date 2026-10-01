@@ -370,3 +370,18 @@ class RevisedSalesMessage(BaseModel):
     full_copy: str
     revised_sections: list[str]
     preserved_sections: list[str]
+
+
+class ClaimReview(BaseModel):
+    section: str
+    claim: str
+    support_status: str
+    supporting_evidence: list[str]
+    unsupported_part: str
+    required_action: str
+
+
+class ClaimEvidenceReport(BaseModel):
+    claims: list[ClaimReview]
+    unsupported_claims: list[str]
+    revision_needed: bool
