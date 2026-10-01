@@ -172,3 +172,11 @@ class HeadlineCandidate(BaseModel):
 
 class HeadlineCandidateSet(BaseModel):
     headlines: list[HeadlineCandidate]
+
+
+class OpeningDraft(BaseModel):
+    opening: str
+    recognition_trigger: str
+    transition_to_problem: str
+    angle_connection: str
+    evidence_check: str

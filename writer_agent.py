@@ -3,8 +3,10 @@ from agents import Agent, Runner
 from models import (
     BigIdeaHypothesis,
     CreativeAngle,
+    HeadlineCandidate,
     HeadlineCandidateSet,
     MessageEntryPoint,
+    OpeningDraft,
     ReaderProfile,
 )
 
@@ -93,6 +95,74 @@ Do not write body copy yet.
 )
 
 
+opening_writer_agent = Agent(
+    name="Opening Writer Agent",
+
+    instructions="""
+You are the Opening Writer Agent for KOgenie Copy Studio.
+
+You receive:
+- a ReaderProfile
+- a BigIdeaHypothesis
+- one selected CreativeAngle
+- a MessageEntryPoint
+- one selected HeadlineCandidate
+
+Your job is to write the opening immediately after the headline.
+
+PRIMARY JOB:
+
+Create recognition.
+
+The reader should feel:
+"That sounds like my situation."
+
+WRITING RULES:
+
+- Enter the reader's existing situation before talking
+  extensively about the product.
+- Keep the selected CreativeAngle intact.
+- Continue naturally from the selected headline.
+- Make each sentence create a reason to read the next.
+- Use concrete situations when the evidence supports them.
+- Prefer clear, easy sentences.
+- Do not over-explain.
+- Do not introduce every product feature.
+- Do not write the full sales message yet.
+
+EVIDENCE RULES:
+
+- Stay within the supplied strategy.
+- Do not invent customer quotes.
+- Do not invent performance claims.
+- Do not invent statistics.
+- Do not invent product capabilities.
+- Do not exaggerate consequences merely to create drama.
+
+Return:
+
+opening
+- the actual opening copy
+
+recognition_trigger
+- explain which reader situation or evidence creates recognition
+
+transition_to_problem
+- explain what problem the opening is moving toward
+
+angle_connection
+- explain how it continues the selected CreativeAngle
+
+evidence_check
+- explain why the copy remains inside the evidence
+""",
+
+    model="gpt-6-luna",
+
+    output_type=OpeningDraft,
+)
+
+
 def generate_headline_candidates(
     reader_profile: ReaderProfile,
     big_idea: BigIdeaHypothesis,
@@ -130,6 +200,56 @@ All four must express the SAME selected angle.
 
 They should differ in attention approach,
 not in underlying strategy.
+"""
+    )
+
+    return result.final_output
+
+
+def write_opening(
+    reader_profile: ReaderProfile,
+    big_idea: BigIdeaHypothesis,
+    selected_angle: CreativeAngle,
+    message_entry_point: MessageEntryPoint,
+    selected_headline: HeadlineCandidate,
+) -> OpeningDraft:
+
+    result = Runner.run_sync(
+        opening_writer_agent,
+        f"""
+Here is the ReaderProfile:
+
+{reader_profile.model_dump_json(indent=2)}
+
+Here is the BigIdeaHypothesis:
+
+{big_idea.model_dump_json(indent=2)}
+
+Here is the selected CreativeAngle:
+
+{selected_angle.model_dump_json(indent=2)}
+
+Here is the MessageEntryPoint:
+
+{message_entry_point.model_dump_json(indent=2)}
+
+Here is the selected HeadlineCandidate:
+
+{selected_headline.model_dump_json(indent=2)}
+
+Write the opening that immediately follows this headline.
+
+The opening should move through:
+
+headline
+   ↓
+recognition
+   ↓
+reader's existing situation
+   ↓
+clearer statement of the problem
+
+Do not introduce the complete solution yet.
 """
     )
 
