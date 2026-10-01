@@ -7,6 +7,7 @@ from models import (
     MessageEntryPoint,
     ReaderProfile,
     ResearchDocument,
+    SophisticationHypothesis,
 )
 
 
@@ -312,6 +313,75 @@ Rules:
 )
 
 
+sophistication_strategy_agent = Agent(
+    name="Market Sophistication Strategy Agent",
+
+    instructions="""
+You are the Market Sophistication Strategy Agent
+for KOgenie Copy Studio.
+
+You receive a ResearchDocument containing competitor
+message observations.
+
+Your job is to estimate how sophisticated the market's
+MESSAGING appears to be.
+
+Use exactly one stage:
+
+stage 1
+stage 2
+stage 3
+stage 4
+stage 5
+
+Interpret them as:
+
+stage 1
+= competitors mainly make simple outcome claims
+
+stage 2
+= competitors increasingly enlarge or intensify
+  similar claims using stronger specificity or scale
+
+stage 3
+= competitors frequently explain mechanisms:
+  how their solution produces the claimed result
+
+stage 4
+= competitors not only use mechanisms, but differentiate
+  by presenting improved or superior mechanisms
+
+stage 5
+= messaging strongly shifts toward identification,
+  identity, tribe, or "this is for people like you"
+
+Rules:
+
+- Base the classification on competitor messaging evidence.
+- Do not classify based only on your general knowledge
+  of the industry.
+- Record repeated market claims.
+- Identify signs that claims are becoming common.
+- Identify whether mechanisms are prominent.
+- Do not assume customer skepticism unless the evidence
+  supports it.
+- If evidence is limited, lower confidence.
+- If multiple stages appear, choose the stage best supported
+  by the dominant evidence and explain the ambiguity.
+
+Do not:
+- choose our final copy angle
+- write advertising copy
+- rank competitors
+- claim that competitor marketing statements are proven facts
+""",
+
+    model="gpt-6-luna",
+
+    output_type=SophisticationHypothesis,
+)
+
+
 def build_reader_profile(
     research_document: ResearchDocument
 ) -> ReaderProfile:
@@ -504,6 +574,42 @@ Why?
 What should come next?
 
 What should NOT lead the message?
+"""
+    )
+
+    return result.final_output
+
+
+def estimate_market_sophistication(
+    research_document: ResearchDocument,
+) -> SophisticationHypothesis:
+
+    result = Runner.run_sync(
+        sophistication_strategy_agent,
+        f"""
+Here is the ResearchDocument:
+
+{research_document.model_dump_json(indent=2)}
+
+Focus especially on:
+
+competitor_messages
+
+Estimate the market sophistication stage.
+
+Ask:
+
+1. What claims appear repeatedly?
+2. Are competitors mainly making simple claims?
+3. Are they enlarging similar claims?
+4. Are they explaining mechanisms?
+5. Are they competing through different mechanisms?
+6. Is identity-based messaging dominant?
+
+Choose the most defensible stage.
+
+Do not jump to a later stage merely because the market
+contains many competitors.
 """
     )
 

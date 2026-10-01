@@ -95,3 +95,12 @@ class MessageEntryPoint(BaseModel):
     why_this_start: str
     information_to_introduce_next: list[str]
     information_to_avoid_leading_with: list[str]
+
+
+class SophisticationHypothesis(BaseModel):
+    stage: str
+    common_market_claims: list[str]
+    signs_of_saturation: list[str]
+    mechanism_presence: list[str]
+    supporting_evidence: list[str]
+    confidence: str
