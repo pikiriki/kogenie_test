@@ -5,6 +5,7 @@ from models import (
     CompleteSalesMessage,
     CopyStrategyCard,
     MetaFeedAdDraft,
+    SearchAdDraft,
 )
 
 
@@ -76,6 +77,86 @@ The task is COMPRESSION, not invention.
 )
 
 
+search_ad_writer_agent = Agent(
+    name="Search Ad Writer Agent",
+
+    instructions="""
+You are the Search Ad Writer Agent for KOgenie Copy Studio.
+
+You receive:
+- a CompleteSalesMessage
+- a CopyStrategyCard
+- a ChannelSpec
+- a supplied search intent
+
+Your job is to adapt the existing campaign strategy
+into a Google Search ad.
+
+You are NOT creating a new strategy.
+
+SEARCH INTENT:
+
+- Treat the supplied search intent as evidence of what
+  the person is currently looking for.
+- Connect the ad directly to that intent.
+- Do not infer unsupported demographics, job titles,
+  company size, budget, or personal characteristics.
+
+HEADLINES:
+
+- Generate exactly 3 concise headline options.
+- Make each relevant to the search intent.
+- Keep them faithful to the documented product capability.
+- Preserve the selected angle when useful.
+- Do not invent superiority or ranking claims.
+
+DESCRIPTIONS:
+
+- Generate exactly 2 concise description options.
+- Explain the relevant product capability clearly.
+- Connect the capability to the search intent.
+- Use the real CTA.
+- Do not invent proof.
+
+CTA:
+
+- Use the actual objective in ChannelSpec.
+
+STRATEGY PRESERVATION:
+
+- Explain which Big Idea, angle, reader problem,
+  or mechanism remains intact.
+
+EVIDENCE DISCIPLINE:
+
+Never invent:
+- performance improvements
+- statistics
+- customer numbers
+- testimonials
+- rankings
+- awards
+- "best"
+- "#1"
+- guaranteed outcomes
+- prices
+- discounts
+- trials
+- guarantees
+- urgency
+- scarcity
+- product capabilities
+
+The task is to adapt the existing campaign
+to expressed search intent without changing its facts.
+""",
+
+    model="gpt-6-luna",
+
+    output_type=SearchAdDraft,
+)
+
+
 def write_meta_feed_ad(
     complete_message: CompleteSalesMessage,
     strategy_card: CopyStrategyCard,
@@ -113,6 +194,54 @@ Meta feed execution
 
 The ad must preserve the selected angle
 and remain inside the evidence and offer boundaries.
+"""
+    )
+
+    return result.final_output
+
+
+def write_search_ad(
+    complete_message: CompleteSalesMessage,
+    strategy_card: CopyStrategyCard,
+    channel_spec: ChannelSpec,
+    search_intent: str,
+) -> SearchAdDraft:
+
+    result = Runner.run_sync(
+        search_ad_writer_agent,
+        f"""
+Here is the CompleteSalesMessage:
+
+{complete_message.model_dump_json(indent=2)}
+
+Here is the CopyStrategyCard:
+
+{strategy_card.model_dump_json(indent=2)}
+
+Here is the ChannelSpec:
+
+{channel_spec.model_dump_json(indent=2)}
+
+Here is the supplied search intent:
+
+{search_intent}
+
+Create one SearchAdDraft.
+
+Use this transformation:
+
+expressed search intent
+        +
+existing campaign strategy
+        ↓
+relevant search execution
+
+Generate:
+- exactly 3 headlines
+- exactly 2 descriptions
+- one CTA
+
+Preserve the strategy and evidence boundaries.
 """
     )
 

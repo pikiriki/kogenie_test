@@ -27,3 +27,32 @@ def get_meta_feed_spec(
             "Use one clear CTA matching the objective.",
         ],
     )
+
+
+def get_google_search_spec(
+    objective: str,
+) -> ChannelSpec:
+
+    return ChannelSpec(
+        channel="Google Search",
+        placement="Search ad",
+        objective=objective,
+        length_constraint=(
+            "Compact search execution. Use short headlines "
+            "and concise descriptions."
+        ),
+        required_fields=[
+            "headlines",
+            "descriptions",
+            "cta",
+        ],
+        formatting_rules=[
+            "Connect directly to the supplied search intent.",
+            "Keep the documented product capability clear.",
+            "Preserve the selected creative angle where relevant.",
+            "Do not invent superiority claims.",
+            "Do not invent proof or performance results.",
+            "Do not invent commercial terms.",
+            "Use a CTA matching the real campaign objective.",
+        ],
+    )

@@ -261,3 +261,12 @@ class MetaFeedAdDraft(BaseModel):
     cta: str
     strategy_preserved: str
     evidence_check: str
+
+
+class SearchAdDraft(BaseModel):
+    headlines: list[str]
+    descriptions: list[str]
+    cta: str
+    intent_connection: str
+    strategy_preserved: str
+    evidence_check: str
