@@ -87,3 +87,38 @@ def get_email_spec(
             "Use one clear CTA matching the objective.",
         ],
     )
+
+
+def get_landing_page_spec(
+    objective: str,
+) -> ChannelSpec:
+
+    return ChannelSpec(
+        channel="Landing Page",
+        placement="Campaign landing page",
+        objective=objective,
+        length_constraint=(
+            "Long-form execution. Give the campaign argument "
+            "enough space to develop through clear page sections."
+        ),
+        required_fields=[
+            "hero_headline",
+            "hero_subheadline",
+            "problem_section",
+            "mechanism_section",
+            "proof_section",
+            "objection_section",
+            "offer_section",
+            "cta",
+        ],
+        formatting_rules=[
+            "Keep one dominant Big Idea throughout the page.",
+            "Preserve the selected creative angle.",
+            "Create recognition before pushing the product.",
+            "Explain the documented mechanism clearly.",
+            "Use only proof that actually exists.",
+            "Preserve unresolved objections and evidence gaps.",
+            "Use only verified commercial terms.",
+            "Use one clear CTA matching the campaign objective.",
+        ],
+    )

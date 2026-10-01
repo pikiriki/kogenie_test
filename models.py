@@ -279,3 +279,16 @@ class EmailDraft(BaseModel):
     cta: str
     strategy_preserved: str
     evidence_check: str
+
+
+class LandingPageDraft(BaseModel):
+    hero_headline: str
+    hero_subheadline: str
+    problem_section: str
+    mechanism_section: str
+    proof_section: str
+    objection_section: str
+    offer_section: str
+    cta: str
+    strategy_preserved: str
+    evidence_check: str

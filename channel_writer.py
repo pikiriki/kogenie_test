@@ -5,6 +5,7 @@ from models import (
     CompleteSalesMessage,
     CopyStrategyCard,
     EmailDraft,
+    LandingPageDraft,
     MetaFeedAdDraft,
     SearchAdDraft,
 )
@@ -244,6 +245,78 @@ not invention.
 )
 
 
+landing_page_writer_agent = Agent(
+    name="Landing Page Writer Agent",
+
+    instructions="""
+You are the Landing Page Writer Agent
+for KOgenie Copy Studio.
+
+You receive:
+- a CompleteSalesMessage
+- a CopyStrategyCard
+- a ChannelSpec
+
+Your job is to adapt the existing campaign into
+one structured landing page.
+
+You are NOT creating a new campaign strategy.
+
+HERO HEADLINE
+- Preserve the selected Big Idea and creative angle.
+- Earn continued reading.
+- Do not invent a stronger promise.
+
+HERO SUBHEADLINE
+- Clarify what the headline means.
+- Connect the reader problem to the documented product capability.
+
+PROBLEM SECTION
+- Create recognition.
+- Use the reader's documented situation.
+- Do not exaggerate consequences.
+
+MECHANISM SECTION
+- Explain the documented mechanism simply.
+- Do not invent technical processes.
+
+PROOF SECTION
+- Use only real proof contained in the existing campaign.
+- Preserve missing proof and limitations.
+- Never invent testimonials, statistics, case studies,
+  customer counts, benchmarks, or performance results.
+
+OBJECTION SECTION
+- Address objections only as far as evidence allows.
+- Preserve unresolved objections.
+
+OFFER SECTION
+- Use only verified offer terms.
+- Do not invent price, discounts, trials, guarantees,
+  bonuses, deadlines, urgency, or scarcity.
+
+CTA
+- Use the actual objective in ChannelSpec.
+
+STRATEGY PRESERVATION
+- Explain which reader problem, Big Idea, angle,
+  mechanism, and offer were preserved.
+
+EVIDENCE DISCIPLINE
+- Do not introduce any new factual or commercial claim.
+- If evidence was missing in the original campaign,
+  it remains missing on the landing page.
+
+The task is structural adaptation,
+not invention.
+""",
+
+    model="gpt-6-luna",
+
+    output_type=LandingPageDraft,
+)
+
+
 def write_meta_feed_ad(
     complete_message: CompleteSalesMessage,
     strategy_card: CopyStrategyCard,
@@ -377,6 +450,50 @@ one focused argument
 real CTA
 
 Preserve evidence and offer boundaries.
+"""
+    )
+
+    return result.final_output
+
+
+def write_landing_page(
+    complete_message: CompleteSalesMessage,
+    strategy_card: CopyStrategyCard,
+    channel_spec: ChannelSpec,
+) -> LandingPageDraft:
+
+    result = Runner.run_sync(
+        landing_page_writer_agent,
+        f"""
+Here is the CompleteSalesMessage:
+
+{complete_message.model_dump_json(indent=2)}
+
+Here is the CopyStrategyCard:
+
+{strategy_card.model_dump_json(indent=2)}
+
+Here is the ChannelSpec:
+
+{channel_spec.model_dump_json(indent=2)}
+
+Create one LandingPageDraft.
+
+Use this transformation:
+
+existing campaign
+      ↓
+preserve Big Idea
+      ↓
+preserve selected angle
+      ↓
+organize into visible sections
+      ↓
+preserve proof and offer boundaries
+      ↓
+landing page
+
+Do not create a new campaign.
 """
     )
 
