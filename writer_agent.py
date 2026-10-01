@@ -10,7 +10,9 @@ from models import (
     MessageEntryPoint,
     ObjectionMap,
     OpeningDraft,
+    ProofSectionDraft,
     ReaderProfile,
+    ResearchDocument,
 )
 
 
@@ -242,6 +244,72 @@ evidence_check
 )
 
 
+proof_writer_agent = Agent(
+    name="Proof Section Writer Agent",
+
+    instructions="""
+You are the Proof Section Writer Agent
+for KOgenie Copy Studio.
+
+You receive:
+- a ResearchDocument
+- a MechanismHypothesis
+- an ObjectionMap
+- a MechanismSectionDraft
+
+Your job is to determine what proof can honestly be used
+after the mechanism section.
+
+CRITICAL RULE:
+
+Never invent proof.
+
+Do NOT invent:
+- statistics
+- customer counts
+- performance improvements
+- testimonials
+- case studies
+- awards
+- authorities
+- demonstrations that have not actually occurred
+
+PROOF POINTS
+- Use only evidence already contained in the
+  ResearchDocument.
+- Prefer verified claims and documented product facts.
+
+DEMONSTRATION PLAN
+- Suggest concrete ways the mechanism could be shown.
+- Clearly describe them as demonstrations to perform,
+  not proof that already exists.
+
+VERIFIED CLAIMS USED
+- Include only supplied approved claims.
+
+MISSING PROOF
+- Explicitly list important evidence that would be useful
+  but is currently absent.
+- Do not hide gaps.
+
+PROOF COPY
+- Write only copy supported by existing evidence.
+- If evidence is limited, keep the proof section modest.
+- Do not turn a demonstration plan into a completed result.
+- Do not imply performance outcomes that have not been measured.
+
+Use objections to identify what kind of proof would matter,
+but do not pretend that required proof already exists.
+
+Do not write the offer or CTA yet.
+""",
+
+    model="gpt-6-luna",
+
+    output_type=ProofSectionDraft,
+)
+
+
 def generate_headline_candidates(
     reader_profile: ReaderProfile,
     big_idea: BigIdeaHypothesis,
@@ -386,6 +454,53 @@ reason why the mechanism can help
 bridge naturally to KOgenie
 
 Stay inside the evidence.
+"""
+    )
+
+    return result.final_output
+
+
+def write_proof_section(
+    research_document: ResearchDocument,
+    mechanism_hypothesis: MechanismHypothesis,
+    objection_map: ObjectionMap,
+    mechanism_section: MechanismSectionDraft,
+) -> ProofSectionDraft:
+
+    result = Runner.run_sync(
+        proof_writer_agent,
+        f"""
+Here is the ResearchDocument:
+
+{research_document.model_dump_json(indent=2)}
+
+Here is the MechanismHypothesis:
+
+{mechanism_hypothesis.model_dump_json(indent=2)}
+
+Here is the ObjectionMap:
+
+{objection_map.model_dump_json(indent=2)}
+
+Here is the MechanismSectionDraft:
+
+{mechanism_section.model_dump_json(indent=2)}
+
+Create the proof section.
+
+Use this sequence:
+
+mechanism claim
+      ↓
+reader skepticism
+      ↓
+existing evidence
+      ↓
+safe proof copy
+
+Then separately state what additional proof is missing.
+
+Never fabricate evidence.
 """
     )
 

@@ -188,3 +188,11 @@ class MechanismSectionDraft(BaseModel):
     reason_why: str
     bridge_to_product: str
     evidence_check: str
+
+
+class ProofSectionDraft(BaseModel):
+    proof_points: list[str]
+    demonstration_plan: list[str]
+    verified_claims_used: list[str]
+    missing_proof: list[str]
+    proof_copy: str
