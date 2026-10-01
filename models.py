@@ -65,3 +65,11 @@ class ReaderProfile(BaseModel):
     current_situation: str
     primary_problem: str
     desired_outcome: str
+
+
+class DesireHypothesis(BaseModel):
+    product_capability: str
+    functional_benefit: str
+    deeper_desire: str
+    supporting_evidence: list[str]
+    confidence: str
