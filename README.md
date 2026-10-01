@@ -4,7 +4,7 @@ A simple browser interface for building an AI-assisted copywriting workflow.
 
 ## Current version
 
-Version 7 — Cross-Channel Campaign Engine
+Version 8 — Review, Revision, and Human Approval
 
 ## What the app currently does
 
@@ -110,6 +110,37 @@ Strategy stays stable while execution changes by channel.
 
 Passing channel drafts are preserved during repair.
 Only channels identified by the consistency reviewer are rewritten.
+
+## Version 8 — Review, Revision, and Human Approval
+
+Version 8 adds a structured quality-control layer around generated copy.
+
+The system now includes:
+
+- copy-quality critique
+- targeted copy revision
+- claim-level evidence review
+- evidence-grounded claim repair
+- brand-voice review
+- targeted brand-voice revision
+- unified review reporting
+- dependency-aware revision planning
+- bounded revision orchestration
+- cross-channel re-review
+- human approval records
+
+Approval lifecycle:
+
+Draft
+→ Automated checks passed
+→ Awaiting human approval
+→ Approved or rejected
+
+Human approval applies to a specific stored copy snapshot.
+
+If the copy changes, a new approval request is required.
+
+Automated review passing does not automatically publish or approve copy.
 
 ## Current limitation
 

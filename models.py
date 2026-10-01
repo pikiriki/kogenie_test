@@ -437,3 +437,13 @@ class RevisionOrchestrationResult(BaseModel):
     channel_report: ChannelConsistencyReport
 
     unified_report: UnifiedReviewReport
+
+
+class ApprovalRecord(BaseModel):
+    id: int | None = None
+    campaign_id: int
+    status: str
+    reviewer: str
+    note: str
+    approved_message_snapshot: str
+    approved_at: str | None = None

@@ -1,4 +1,12 @@
+import json
 import sqlite3
+
+from datetime import datetime, timezone
+
+from models import (
+    ApprovalRecord,
+    CompleteSalesMessage,
+)
 
 
 DATABASE_NAME = "copy_studio.db"
@@ -132,6 +140,31 @@ def initialize_database():
             ADD COLUMN note TEXT NOT NULL DEFAULT ''
             """
         )
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS approval_records (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            campaign_id INTEGER NOT NULL,
+
+            status TEXT NOT NULL,
+
+            reviewer TEXT NOT NULL DEFAULT '',
+
+            note TEXT NOT NULL DEFAULT '',
+
+            approved_message_snapshot TEXT NOT NULL,
+
+            approved_at TEXT,
+
+            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+            FOREIGN KEY (campaign_id)
+                REFERENCES campaigns(id)
+        )
+        """
+    )
 
     connection.commit()
     connection.close()
@@ -442,3 +475,168 @@ def get_approved_claims(brand_profile_id):
     connection.close()
 
     return claims
+
+def create_approval_request(
+    campaign_id: int,
+    message: CompleteSalesMessage,
+) -> int:
+
+    snapshot = json.dumps(
+        message.model_dump(),
+        indent=2,
+    )
+
+    connection = sqlite3.connect(DATABASE_NAME)
+
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        INSERT INTO approval_records (
+            campaign_id,
+            status,
+            reviewer,
+            note,
+            approved_message_snapshot,
+            approved_at
+        )
+        VALUES (?, ?, ?, ?, ?, ?)
+        """,
+        (
+            campaign_id,
+            "awaiting human approval",
+            "",
+            "",
+            snapshot,
+            None,
+        ),
+    )
+
+    approval_id = cursor.lastrowid
+
+    connection.commit()
+    connection.close()
+
+    return approval_id
+
+
+def decide_approval(
+    approval_id: int,
+    decision: str,
+    reviewer: str,
+    note: str,
+) -> None:
+
+    normalized_decision = (
+        decision.strip().lower()
+    )
+
+    if normalized_decision not in {
+        "approved",
+        "rejected",
+    }:
+        raise ValueError(
+            "Decision must be 'approved' or 'rejected'."
+        )
+
+    existing = get_approval_record(
+        approval_id
+    )
+
+
+    if existing is None:
+        raise ValueError(
+            "Approval record was not found."
+        )
+
+
+    if existing.status != "awaiting human approval":
+        raise ValueError(
+            "This approval request has already been decided."
+        )
+
+    if normalized_decision == "approved":
+
+        approved_at = datetime.now(
+            timezone.utc
+        ).isoformat()
+
+    else:
+
+        approved_at = None
+
+    connection = sqlite3.connect(DATABASE_NAME)
+
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        UPDATE approval_records
+
+        SET
+            status = ?,
+            reviewer = ?,
+            note = ?,
+            approved_at = ?
+
+        WHERE id = ?
+        """,
+        (
+            normalized_decision,
+            reviewer,
+            note,
+            approved_at,
+            approval_id,
+        ),
+    )
+
+    connection.commit()
+    connection.close()
+
+
+def get_approval_record(
+    approval_id: int,
+) -> ApprovalRecord | None:
+
+    connection = sqlite3.connect(DATABASE_NAME)
+
+    connection.row_factory = sqlite3.Row
+
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        SELECT
+            id,
+            campaign_id,
+            status,
+            reviewer,
+            note,
+            approved_message_snapshot,
+            approved_at
+
+        FROM approval_records
+
+        WHERE id = ?
+        """,
+        (approval_id,),
+    )
+
+    row = cursor.fetchone()
+
+    connection.close()
+
+    if row is None:
+        return None
+
+    return ApprovalRecord(
+        id=row["id"],
+        campaign_id=row["campaign_id"],
+        status=row["status"],
+        reviewer=row["reviewer"],
+        note=row["note"],
+        approved_message_snapshot=(
+            row["approved_message_snapshot"]
+        ),
+        approved_at=row["approved_at"],
+    )
