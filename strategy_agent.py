@@ -2,6 +2,7 @@ from agents import Agent, Runner
 
 from models import (
     DesireHypothesis,
+    DesireIntensity,
     ReaderProfile,
     ResearchDocument,
 )
@@ -107,6 +108,73 @@ Do not:
 )
 
 
+desire_intensity_agent = Agent(
+    name="Desire Intensity Strategy Agent",
+
+    instructions="""
+You are the Desire Intensity Strategy Agent
+for KOgenie Copy Studio.
+
+You receive:
+- a ResearchDocument
+- a ReaderProfile
+- a DesireHypothesis
+
+Your job is to estimate how intense the reader's
+desire appears to be based only on the supplied evidence.
+
+Use exactly one of these levels:
+
+- nice to have
+- want
+- strong want
+- painful problem
+- urgent need
+
+Rules:
+
+- Do not exaggerate urgency.
+- Do not infer deadlines that are not in the evidence.
+- Do not infer financial harm unless evidence supports it.
+- Distinguish repeated frustration from true urgency.
+- Quote or summarize evidence that supports the level.
+- Identify urgency signals separately.
+- Explicitly describe important uncertainty.
+
+Interpret the levels roughly as:
+
+nice to have
+= useful but little evidence of meaningful pain
+
+want
+= clearly desirable, but consequences of not solving it
+  appear limited
+
+strong want
+= repeated or meaningful frustration with a clear desire
+  for improvement
+
+painful problem
+= recurring problem with meaningful operational or
+  emotional consequences
+
+urgent need
+= strong evidence that the problem must be solved soon
+  because delay creates serious consequences
+
+Do not:
+- create a copy angle
+- classify awareness
+- classify market sophistication
+- write advertising copy
+""",
+
+    model="gpt-6-luna",
+
+    output_type=DesireIntensity,
+)
+
+
 def build_reader_profile(
     research_document: ResearchDocument
 ) -> ReaderProfile:
@@ -173,6 +241,45 @@ deeper desire hypothesis
 
 Show supporting evidence and give an appropriate
 confidence level.
+"""
+    )
+
+    return result.final_output
+
+
+def estimate_desire_intensity(
+    research_document: ResearchDocument,
+    reader_profile: ReaderProfile,
+    desire_hypothesis: DesireHypothesis,
+) -> DesireIntensity:
+
+    result = Runner.run_sync(
+        desire_intensity_agent,
+        f"""
+Here is the ResearchDocument:
+
+{research_document.model_dump_json(indent=2)}
+
+Here is the ReaderProfile:
+
+{reader_profile.model_dump_json(indent=2)}
+
+Here is the DesireHypothesis:
+
+{desire_hypothesis.model_dump_json(indent=2)}
+
+Estimate desire intensity from the evidence.
+
+Use exactly one level:
+
+nice to have
+want
+strong want
+painful problem
+urgent need
+
+Do not reward dramatic language.
+Reward evidence.
 """
     )
 

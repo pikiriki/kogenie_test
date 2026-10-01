@@ -73,3 +73,10 @@ class DesireHypothesis(BaseModel):
     deeper_desire: str
     supporting_evidence: list[str]
     confidence: str
+
+
+class DesireIntensity(BaseModel):
+    level: str
+    evidence: list[str]
+    urgency_signals: list[str]
+    uncertainty: str
