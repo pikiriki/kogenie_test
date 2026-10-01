@@ -160,3 +160,15 @@ class CreativeAngle(BaseModel):
 
 class CreativeAngleSet(BaseModel):
     angles: list[CreativeAngle]
+
+
+class HeadlineCandidate(BaseModel):
+    headline: str
+    attention_principle: str
+    angle_connection: str
+    evidence_check: str
+    risk: str
+
+
+class HeadlineCandidateSet(BaseModel):
+    headlines: list[HeadlineCandidate]
