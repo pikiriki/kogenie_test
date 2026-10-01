@@ -347,3 +347,13 @@ class CampaignRepairResult(BaseModel):
     campaign_pack: CampaignPack
     repaired_channels: list[str]
     untouched_channels: list[str]
+
+
+class CopyCritique(BaseModel):
+    clarity_issues: list[str]
+    specificity_issues: list[str]
+    credibility_issues: list[str]
+    flow_issues: list[str]
+    repetition_issues: list[str]
+    weak_sections: list[str]
+    revision_instructions: list[str]
