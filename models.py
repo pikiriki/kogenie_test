@@ -180,3 +180,11 @@ class OpeningDraft(BaseModel):
     transition_to_problem: str
     angle_connection: str
     evidence_check: str
+
+
+class MechanismSectionDraft(BaseModel):
+    problem_explanation: str
+    mechanism_explanation: str
+    reason_why: str
+    bridge_to_product: str
+    evidence_check: str

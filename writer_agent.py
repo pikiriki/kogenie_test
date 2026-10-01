@@ -5,7 +5,10 @@ from models import (
     CreativeAngle,
     HeadlineCandidate,
     HeadlineCandidateSet,
+    MechanismHypothesis,
+    MechanismSectionDraft,
     MessageEntryPoint,
+    ObjectionMap,
     OpeningDraft,
     ReaderProfile,
 )
@@ -163,6 +166,82 @@ evidence_check
 )
 
 
+mechanism_section_writer_agent = Agent(
+    name="Mechanism Section Writer Agent",
+
+    instructions="""
+You are the Mechanism Section Writer Agent
+for KOgenie Copy Studio.
+
+You receive:
+- a ReaderProfile
+- a BigIdeaHypothesis
+- one CreativeAngle
+- an OpeningDraft
+- a MechanismHypothesis
+- an ObjectionMap
+
+Your job is to write the section that follows the opening.
+
+The reader has already recognized the problem.
+
+Now answer:
+
+1. What is happening?
+2. Why does the existing situation create the problem?
+3. How does the documented product mechanism work?
+4. Why might that mechanism help?
+5. How do we naturally bridge to the product?
+
+CRITICAL EVIDENCE RULES:
+
+- Use only documented product capabilities.
+- Use only causal explanations supported by the
+  MechanismHypothesis.
+- Do not invent hidden technical processes.
+- Do not invent proprietary technology.
+- Do not claim better ROAS, lower CAC, higher conversion,
+  or superior creative performance without evidence.
+- Do not turn an unsupported leap into a reason why.
+- If the true cause of the customer's problem is not known,
+  do not pretend that it is known.
+
+WRITING RULES:
+
+- Continue naturally from the OpeningDraft.
+- Use clear language rather than technical-sounding language.
+- Explain the mechanism simply.
+- Make the causal chain easy to follow.
+- Do not write the full proof section yet.
+- Do not handle every objection yet.
+- Do not write the offer or CTA yet.
+
+Return:
+
+problem_explanation
+- clarify the reader's problem without exaggeration
+
+mechanism_explanation
+- explain what the product actually does
+
+reason_why
+- explain why that documented mechanism can plausibly
+  contribute to the desired outcome
+
+bridge_to_product
+- transition naturally into the product
+
+evidence_check
+- state which claims are supported and which stronger
+  claims were intentionally avoided
+""",
+
+    model="gpt-6-luna",
+
+    output_type=MechanismSectionDraft,
+)
+
+
 def generate_headline_candidates(
     reader_profile: ReaderProfile,
     big_idea: BigIdeaHypothesis,
@@ -250,6 +329,63 @@ reader's existing situation
 clearer statement of the problem
 
 Do not introduce the complete solution yet.
+"""
+    )
+
+    return result.final_output
+
+
+def write_mechanism_section(
+    reader_profile: ReaderProfile,
+    big_idea: BigIdeaHypothesis,
+    selected_angle: CreativeAngle,
+    opening: OpeningDraft,
+    mechanism_hypothesis: MechanismHypothesis,
+    objection_map: ObjectionMap,
+) -> MechanismSectionDraft:
+
+    result = Runner.run_sync(
+        mechanism_section_writer_agent,
+        f"""
+Here is the ReaderProfile:
+
+{reader_profile.model_dump_json(indent=2)}
+
+Here is the BigIdeaHypothesis:
+
+{big_idea.model_dump_json(indent=2)}
+
+Here is the selected CreativeAngle:
+
+{selected_angle.model_dump_json(indent=2)}
+
+Here is the OpeningDraft:
+
+{opening.model_dump_json(indent=2)}
+
+Here is the MechanismHypothesis:
+
+{mechanism_hypothesis.model_dump_json(indent=2)}
+
+Here is the ObjectionMap:
+
+{objection_map.model_dump_json(indent=2)}
+
+Write the mechanism section that follows the opening.
+
+Use this flow:
+
+recognition
+     ↓
+clarify problem
+     ↓
+explain documented mechanism
+     ↓
+reason why the mechanism can help
+     ↓
+bridge naturally to KOgenie
+
+Stay inside the evidence.
 """
     )
 
