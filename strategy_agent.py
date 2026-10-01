@@ -6,6 +6,7 @@ from models import (
     DesireIntensity,
     MechanismHypothesis,
     MessageEntryPoint,
+    ObjectionMap,
     ReaderProfile,
     ResearchDocument,
     SophisticationHypothesis,
@@ -455,6 +456,81 @@ Do not:
 )
 
 
+objection_strategy_agent = Agent(
+    name="Objection Strategy Agent",
+
+    instructions="""
+You are the Objection Strategy Agent for KOgenie Copy Studio.
+
+You receive:
+- a ResearchDocument
+- a ReaderProfile
+- a DesireHypothesis
+- an AwarenessHypothesis
+- a MechanismHypothesis
+
+Your job is to identify the strongest reader objections that
+are actually supported or reasonably implied by the evidence.
+
+For each objection, produce:
+
+objection
+- State the concern in plain reader language.
+
+objection_type
+Use a useful category such as:
+- efficacy
+- fit
+- trust
+- timing
+- value
+- risk
+
+supporting_evidence
+- Show why this objection is plausible.
+- Use supplied research and strategy evidence.
+- Do not invent customer quotations.
+
+what_answer_is_needed
+- Explain what the sales message would need to clarify
+  in order to address the objection.
+- Do not write final copy.
+
+proof_required
+- List the evidence that would be needed to answer the
+  objection credibly.
+- If that proof is currently missing, say so.
+
+confidence
+Use exactly:
+- high
+- medium
+- low
+
+Critical rules:
+
+- Do not assume every generic sales objection exists.
+- The standard questions "Will this work?", "Why now?",
+  "Why you?", etc. are categories to consider, not evidence.
+- Prefer fewer well-supported objections over many invented ones.
+- If the ResearchDocument contains no evidence for price concerns,
+  do not invent a price objection.
+- If evidence is missing, expose the gap rather than guessing.
+- Distinguish objections from evidence that answers them.
+
+Do not:
+- write advertising copy
+- create an offer
+- invent testimonials
+- invent performance claims
+""",
+
+    model="gpt-6-luna",
+
+    output_type=ObjectionMap,
+)
+
+
 def build_reader_profile(
     research_document: ResearchDocument
 ) -> ReaderProfile:
@@ -725,6 +801,55 @@ Stay inside the evidence.
 
 List unsupported leaps explicitly instead of filling them
 with guesses.
+"""
+    )
+
+    return result.final_output
+
+
+def build_objection_map(
+    research_document: ResearchDocument,
+    reader_profile: ReaderProfile,
+    desire_hypothesis: DesireHypothesis,
+    awareness_hypothesis: AwarenessHypothesis,
+    mechanism_hypothesis: MechanismHypothesis,
+) -> ObjectionMap:
+
+    result = Runner.run_sync(
+        objection_strategy_agent,
+        f"""
+Here is the ResearchDocument:
+
+{research_document.model_dump_json(indent=2)}
+
+Here is the ReaderProfile:
+
+{reader_profile.model_dump_json(indent=2)}
+
+Here is the DesireHypothesis:
+
+{desire_hypothesis.model_dump_json(indent=2)}
+
+Here is the AwarenessHypothesis:
+
+{awareness_hypothesis.model_dump_json(indent=2)}
+
+Here is the MechanismHypothesis:
+
+{mechanism_hypothesis.model_dump_json(indent=2)}
+
+Build an ObjectionMap.
+
+Find only objections that the supplied evidence supports
+or reasonably implies.
+
+For every objection ask:
+
+1. What is the reader worried about?
+2. Why do we think they may worry about it?
+3. What explanation is needed?
+4. What proof would make that explanation believable?
+5. Do we actually have that proof yet?
 """
     )
 

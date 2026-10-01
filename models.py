@@ -113,3 +113,16 @@ class MechanismHypothesis(BaseModel):
     supporting_evidence: list[str]
     unsupported_leaps: list[str]
     confidence: str
+
+
+class ObjectionItem(BaseModel):
+    objection: str
+    objection_type: str
+    supporting_evidence: list[str]
+    what_answer_is_needed: str
+    proof_required: list[str]
+    confidence: str
+
+
+class ObjectionMap(BaseModel):
+    objections: list[ObjectionItem]
