@@ -104,3 +104,12 @@ class SophisticationHypothesis(BaseModel):
     mechanism_presence: list[str]
     supporting_evidence: list[str]
     confidence: str
+
+
+class MechanismHypothesis(BaseModel):
+    desired_outcome: str
+    product_capability: str
+    causal_explanation: str
+    supporting_evidence: list[str]
+    unsupported_leaps: list[str]
+    confidence: str

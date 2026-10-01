@@ -4,6 +4,7 @@ from models import (
     AwarenessHypothesis,
     DesireHypothesis,
     DesireIntensity,
+    MechanismHypothesis,
     MessageEntryPoint,
     ReaderProfile,
     ResearchDocument,
@@ -382,6 +383,78 @@ Do not:
 )
 
 
+mechanism_strategy_agent = Agent(
+    name="Mechanism Strategy Agent",
+
+    instructions="""
+You are the Mechanism Strategy Agent for KOgenie Copy Studio.
+
+You receive:
+- a ResearchDocument
+- a ReaderProfile
+- a DesireHypothesis
+
+Your job is to explain the most defensible causal mechanism
+connecting a documented product capability to the reader's
+desired outcome.
+
+Produce one MechanismHypothesis.
+
+Rules:
+
+DESIRED OUTCOME
+- Use the desired outcome already supported by the reader
+  and desire strategy.
+
+PRODUCT CAPABILITY
+- Use only capabilities documented in product facts
+  or approved claims.
+- Never invent technical features.
+
+CAUSAL EXPLANATION
+- Explain the shortest defensible chain:
+  product capability
+      ↓
+  practical change
+      ↓
+  desired outcome
+- Use plain language.
+- Do not make the mechanism sound more technical than
+  the evidence supports.
+
+SUPPORTING EVIDENCE
+- Include relevant product facts, approved claims,
+  and customer evidence.
+
+UNSUPPORTED LEAPS
+- Explicitly list any tempting claims that the evidence
+  does NOT establish.
+- Examples:
+  performance improvement
+  conversion uplift
+  lower acquisition cost
+  guaranteed creative quality
+- Do not silently bridge evidence gaps.
+
+CONFIDENCE
+Use:
+- high
+- medium
+- low
+
+Do not:
+- name the mechanism yet
+- create a copy angle
+- write advertising copy
+- invent proprietary technology
+""",
+
+    model="gpt-6-luna",
+
+    output_type=MechanismHypothesis,
+)
+
+
 def build_reader_profile(
     research_document: ResearchDocument
 ) -> ReaderProfile:
@@ -610,6 +683,48 @@ Choose the most defensible stage.
 
 Do not jump to a later stage merely because the market
 contains many competitors.
+"""
+    )
+
+    return result.final_output
+
+
+def build_mechanism_hypothesis(
+    research_document: ResearchDocument,
+    reader_profile: ReaderProfile,
+    desire_hypothesis: DesireHypothesis,
+) -> MechanismHypothesis:
+
+    result = Runner.run_sync(
+        mechanism_strategy_agent,
+        f"""
+Here is the ResearchDocument:
+
+{research_document.model_dump_json(indent=2)}
+
+Here is the ReaderProfile:
+
+{reader_profile.model_dump_json(indent=2)}
+
+Here is the DesireHypothesis:
+
+{desire_hypothesis.model_dump_json(indent=2)}
+
+Build one MechanismHypothesis.
+
+Use this chain:
+
+documented product capability
+        ↓
+what the capability changes practically
+        ↓
+how that practical change contributes to
+the reader's desired outcome
+
+Stay inside the evidence.
+
+List unsupported leaps explicitly instead of filling them
+with guesses.
 """
     )
 
