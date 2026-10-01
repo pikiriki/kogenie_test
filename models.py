@@ -421,3 +421,19 @@ class RevisionPlan(BaseModel):
     copy_repairs: list[str]
     channel_repairs: list[str]
     execution_order: list[str]
+
+
+class RevisionOrchestrationResult(BaseModel):
+    status: str
+    actions_taken: list[str]
+    research_blockers: list[str]
+
+    complete_message: CompleteSalesMessage
+    campaign_pack: CampaignPack
+
+    copy_critique: CopyCritique
+    claim_report: ClaimEvidenceReport
+    brand_review: BrandVoiceReview
+    channel_report: ChannelConsistencyReport
+
+    unified_report: UnifiedReviewReport
