@@ -4,7 +4,7 @@ A simple browser interface for building an AI-assisted copywriting workflow.
 
 ## Current version
 
-Version 6 — Evidence-Grounded Copywriting Engine
+Version 7 — Cross-Channel Campaign Engine
 
 ## What the app currently does
 
@@ -79,6 +79,37 @@ The system separates:
 
 Missing evidence and missing commercial terms are preserved
 instead of silently invented.
+
+## Version 7 — Cross-Channel Campaign Engine
+
+The system can now adapt one evidence-grounded campaign strategy
+across multiple channels without rebuilding the campaign from scratch.
+
+Supported executions:
+
+- Meta Feed
+- Google Search
+- Email
+- Landing Page
+- X
+
+Version 7 also includes:
+
+- channel specifications
+- controlled Meta execution variants
+- cross-channel campaign packaging
+- semantic consistency review
+- unsupported-claim detection
+- CTA conflict detection
+- targeted channel repair
+- post-repair review
+
+Core principle:
+
+Strategy stays stable while execution changes by channel.
+
+Passing channel drafts are preserved during repair.
+Only channels identified by the consistency reviewer are rewritten.
 
 ## Current limitation
 

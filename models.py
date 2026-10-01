@@ -342,3 +342,8 @@ class ChannelConsistencyReport(BaseModel):
     unsupported_claims: list[str]
     cta_conflicts: list[str]
     revision_needed: bool
+
+class CampaignRepairResult(BaseModel):
+    campaign_pack: CampaignPack
+    repaired_channels: list[str]
+    untouched_channels: list[str]
