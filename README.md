@@ -4,7 +4,7 @@ A simple browser interface for building an AI-assisted copywriting workflow.
 
 ## Current version
 
-Version 3 — Persistent Campaign Workspace
+Version 6 — Evidence-Grounded Copywriting Engine
 
 ## What the app currently does
 
@@ -39,6 +39,46 @@ Human Editing
     ↓
 Working CopyDraft
 ```
+
+## Version 6 — Evidence-Grounded Copywriting Engine
+
+The application can now transform research into a structured
+copywriting strategy and complete sales message.
+
+Current pipeline:
+
+ResearchDocument
+→ ReaderProfile
+→ DesireHypothesis
+→ DesireIntensity
+→ AwarenessHypothesis
+→ MessageEntryPoint
+→ SophisticationHypothesis
+→ MechanismHypothesis
+→ ObjectionMap
+→ OfferStrategy
+→ BigIdeaHypothesis
+→ CreativeAngleSet
+→ HeadlineCandidate
+→ OpeningDraft
+→ MechanismSectionDraft
+→ ProofSectionDraft
+→ ObjectionSectionDraft
+→ OfferSectionDraft
+→ CompleteSalesMessage
+→ CopyStrategyCard
+
+The system separates:
+
+- research
+- strategy
+- writing
+- proof boundaries
+- offer boundaries
+- final copy
+
+Missing evidence and missing commercial terms are preserved
+instead of silently invented.
 
 ## Current limitation
 

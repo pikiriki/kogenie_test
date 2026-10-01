@@ -228,3 +228,19 @@ class CompleteSalesMessage(BaseModel):
     objection_section: str
     offer_section: str
     full_copy: str
+
+
+class CopyStrategyCard(BaseModel):
+    reader: str
+    primary_problem: str
+    deeper_desire: str
+    awareness: str
+    sophistication: str
+    message_entry: str
+    mechanism: str
+    big_idea: str
+    selected_angle: str
+    major_objections: list[str]
+    proof_boundary: list[str]
+    offer_boundary: list[str]
+    final_message: str
