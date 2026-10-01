@@ -402,3 +402,13 @@ class BrandVoiceReview(BaseModel):
     voice_drift: list[str]
     sections_to_revise: list[str]
     revision_instructions: list[str]
+
+
+class UnifiedReviewReport(BaseModel):
+    copy_issues: list[str]
+    claim_issues: list[str]
+    brand_voice_issues: list[str]
+    channel_issues: list[str]
+    sections_requiring_work: list[str]
+    research_needed: list[str]
+    ready_for_approval: bool
