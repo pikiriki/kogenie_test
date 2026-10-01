@@ -147,3 +147,16 @@ class BigIdeaHypothesis(BaseModel):
     promise_boundary: str
     supporting_evidence: list[str]
     confidence: str
+
+
+class CreativeAngle(BaseModel):
+    angle_name: str
+    central_argument: str
+    reader_hook: str
+    mechanism_emphasis: str
+    supporting_evidence: list[str]
+    risk_of_repetition: str
+
+
+class CreativeAngleSet(BaseModel):
+    angles: list[CreativeAngle]

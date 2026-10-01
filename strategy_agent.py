@@ -3,6 +3,7 @@ from agents import Agent, Runner
 from models import (
     AwarenessHypothesis,
     BigIdeaHypothesis,
+    CreativeAngleSet,
     DesireHypothesis,
     DesireIntensity,
     MechanismHypothesis,
@@ -667,6 +668,83 @@ Do not:
 )
 
 
+creative_angle_agent = Agent(
+    name="Creative Angle Strategy Agent",
+
+    instructions="""
+You are the Creative Angle Strategy Agent
+for KOgenie Copy Studio.
+
+You receive:
+- a BigIdeaHypothesis
+- a ReaderProfile
+- a DesireHypothesis
+- a MessageEntryPoint
+- a MechanismHypothesis
+- a SophisticationHypothesis
+- an ObjectionMap
+
+Your job is to generate several genuinely different
+strategic angles for expressing the SAME Big Idea.
+
+Create exactly 3 CreativeAngle objects.
+
+CRITICAL RULE:
+
+Different angle means a different central argument.
+
+Do NOT create three versions that merely:
+- use different adjectives
+- reorder the same sentence
+- change headline wording
+- repeat "save time" three ways
+
+For every angle:
+
+ANGLE NAME
+- Give it a short internal name.
+
+CENTRAL ARGUMENT
+- State the distinct persuasive argument.
+
+READER HOOK
+- Identify the reader thought, frustration, or desire
+  that makes the angle relevant.
+
+MECHANISM EMPHASIS
+- State what part of the documented mechanism this
+  angle emphasizes.
+
+SUPPORTING EVIDENCE
+- Use supplied evidence only.
+- Never invent customer quotes.
+- Never invent product claims.
+
+RISK OF REPETITION
+- Note if the angle overlaps heavily with:
+  common competitor messaging,
+  another proposed angle,
+  or generic AI claims.
+
+Market sophistication matters:
+- Avoid relying entirely on claims the research shows
+  are already common in the market.
+- When appropriate, use the documented mechanism
+  to make the argument more specific.
+
+Do not:
+- write final headlines
+- write body copy
+- invent performance results
+- invent offer terms
+""",
+
+    model="gpt-6-luna",
+
+    output_type=CreativeAngleSet,
+)
+
+
 def build_reader_profile(
     research_document: ResearchDocument
 ) -> ReaderProfile:
@@ -1075,6 +1153,62 @@ The central thought should help the reader see the
 problem or product in a useful new way.
 
 Stay inside the evidence.
+"""
+    )
+
+    return result.final_output
+
+
+def generate_creative_angles(
+    big_idea: BigIdeaHypothesis,
+    reader_profile: ReaderProfile,
+    desire_hypothesis: DesireHypothesis,
+    message_entry_point: MessageEntryPoint,
+    mechanism_hypothesis: MechanismHypothesis,
+    sophistication_hypothesis: SophisticationHypothesis,
+    objection_map: ObjectionMap,
+) -> CreativeAngleSet:
+
+    result = Runner.run_sync(
+        creative_angle_agent,
+        f"""
+Here is the BigIdeaHypothesis:
+
+{big_idea.model_dump_json(indent=2)}
+
+Here is the ReaderProfile:
+
+{reader_profile.model_dump_json(indent=2)}
+
+Here is the DesireHypothesis:
+
+{desire_hypothesis.model_dump_json(indent=2)}
+
+Here is the MessageEntryPoint:
+
+{message_entry_point.model_dump_json(indent=2)}
+
+Here is the MechanismHypothesis:
+
+{mechanism_hypothesis.model_dump_json(indent=2)}
+
+Here is the SophisticationHypothesis:
+
+{sophistication_hypothesis.model_dump_json(indent=2)}
+
+Here is the ObjectionMap:
+
+{objection_map.model_dump_json(indent=2)}
+
+Generate exactly 3 meaningfully different
+CreativeAngle objects.
+
+Before finalizing each angle, ask:
+
+Does this angle make a DIFFERENT argument,
+or is it merely different wording?
+
+Reject near-duplicates.
 """
     )
 
