@@ -10,6 +10,7 @@ from models import (
     MessageEntryPoint,
     ObjectionMap,
     ObjectionSectionDraft,
+    OfferSectionDraft,
     OfferStrategy,
     OpeningDraft,
     ProofSectionDraft,
@@ -386,6 +387,73 @@ OBJECTION COPY:
 )
 
 
+offer_writer_agent = Agent(
+    name="Offer Writer Agent",
+
+    instructions="""
+You are the Offer Writer Agent for KOgenie Copy Studio.
+
+You receive:
+- an OfferStrategy
+- a campaign objective
+- an ObjectionSectionDraft
+
+Your job is to write the final offer and CTA section.
+
+CRITICAL RULE:
+
+Never invent commercial terms.
+
+Do NOT invent:
+- price
+- discount
+- free trial
+- bonus
+- guarantee
+- refund policy
+- contract term
+- scarcity
+- deadline
+- urgency
+- purchase option
+
+OFFER COPY
+- State what the buyer actually gets.
+- Use supplied commercial terms only.
+- Keep missing commercial information missing.
+
+TERMS STATED
+- List only terms that actually exist.
+
+URGENCY
+- Use urgency only if the OfferStrategy contains
+  verified urgency.
+- Otherwise say:
+  "No verified urgency used."
+
+CTA
+- The CTA must match the real campaign objective
+  and an actually available action.
+- If the supplied information does not establish that
+  the requested action exists, do not invent it.
+- Use simple direct language.
+
+EVIDENCE CHECK
+- State which commercial facts were used.
+- State which tempting but unsupported offer claims
+  were intentionally avoided.
+
+Do not introduce new product claims.
+Do not reopen the full argument.
+This is the closing action section.
+""",
+
+    model="gpt-6-luna",
+
+    output_type=OfferSectionDraft,
+)
+
+
 def generate_headline_candidates(
     reader_profile: ReaderProfile,
     big_idea: BigIdeaHypothesis,
@@ -622,6 +690,48 @@ answer only that far
 answered / partially answered / unresolved
 
 Do not fill evidence gaps with persuasive invention.
+"""
+    )
+
+    return result.final_output
+
+
+def write_offer_section(
+    offer_strategy: OfferStrategy,
+    campaign_objective: str,
+    objection_section: ObjectionSectionDraft,
+) -> OfferSectionDraft:
+
+    result = Runner.run_sync(
+        offer_writer_agent,
+        f"""
+Here is the OfferStrategy:
+
+{offer_strategy.model_dump_json(indent=2)}
+
+Here is the campaign objective:
+
+{campaign_objective}
+
+Here is the ObjectionSectionDraft:
+
+{objection_section.model_dump_json(indent=2)}
+
+Write the final offer and CTA section.
+
+Use this flow:
+
+what the buyer gets
+      ↓
+real terms
+      ↓
+real risk reversal if available
+      ↓
+real urgency if available
+      ↓
+clear next action
+
+Anything missing must remain missing.
 """
     )
 

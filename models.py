@@ -210,3 +210,11 @@ class ObjectionSectionDraft(BaseModel):
     unresolved_objections: list[str]
     risk_reversal_available: str
     objection_copy: str
+
+
+class OfferSectionDraft(BaseModel):
+    offer_copy: str
+    terms_stated: list[str]
+    urgency_used: str
+    cta: str
+    evidence_check: str
