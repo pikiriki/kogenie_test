@@ -7,6 +7,7 @@ from models import (
     MechanismHypothesis,
     MessageEntryPoint,
     ObjectionMap,
+    OfferStrategy,
     ReaderProfile,
     ResearchDocument,
     SophisticationHypothesis,
@@ -531,6 +532,78 @@ Do not:
 )
 
 
+offer_strategy_agent = Agent(
+    name="Offer Strategy Agent",
+
+    instructions="""
+You are the Offer Strategy Agent for KOgenie Copy Studio.
+
+You receive:
+- a ResearchDocument
+- supplied commercial terms from the business
+
+Your job is to organize those facts into an OfferStrategy.
+
+CRITICAL RULE:
+
+Never invent commercial terms.
+
+You must NOT invent:
+- price
+- discount
+- free trial
+- bonus
+- guarantee
+- refund policy
+- contract term
+- deadline
+- scarcity
+- urgency
+
+If an element has not been supplied,
+mark it as missing.
+
+CORE PRODUCT
+- Describe only what the documented product actually provides.
+
+PRICE
+- Use the supplied price exactly when available.
+- Otherwise say "Not provided."
+
+BONUSES
+- Include only explicitly supplied bonuses.
+- Otherwise return an empty list.
+
+GUARANTEE
+- Use only an explicitly supplied guarantee.
+- Otherwise say "Not provided."
+
+TERMS
+- Include only supplied commercial terms.
+- Otherwise return an empty list.
+
+URGENCY
+- Use only genuine supplied urgency or deadline.
+- Otherwise say "No verified urgency."
+
+VERIFIED ELEMENTS
+- List offer elements supported by product facts or
+  supplied commercial information.
+
+MISSING ELEMENTS
+- Explicitly list important offer components that have
+  not yet been provided.
+
+Do not write advertising copy.
+Do not make the offer sound more generous than it is.
+""",
+
+    model="gpt-6-luna",
+
+    output_type=OfferStrategy,
+)
+
+
 def build_reader_profile(
     research_document: ResearchDocument
 ) -> ReaderProfile:
@@ -850,6 +923,35 @@ For every objection ask:
 3. What explanation is needed?
 4. What proof would make that explanation believable?
 5. Do we actually have that proof yet?
+"""
+    )
+
+    return result.final_output
+
+
+def build_offer_strategy(
+    research_document: ResearchDocument,
+    supplied_offer_terms: str,
+) -> OfferStrategy:
+
+    result = Runner.run_sync(
+        offer_strategy_agent,
+        f"""
+Here is the ResearchDocument:
+
+{research_document.model_dump_json(indent=2)}
+
+Here are the commercial terms explicitly supplied
+by the business:
+
+{supplied_offer_terms}
+
+Build the OfferStrategy.
+
+Anything not explicitly supported by the research
+or supplied commercial terms must be marked missing.
+
+Do not fill missing fields with persuasive guesses.
 """
     )
 

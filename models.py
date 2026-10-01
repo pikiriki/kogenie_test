@@ -126,3 +126,14 @@ class ObjectionItem(BaseModel):
 
 class ObjectionMap(BaseModel):
     objections: list[ObjectionItem]
+
+
+class OfferStrategy(BaseModel):
+    core_product: str
+    price: str
+    bonuses: list[str]
+    guarantee: str
+    terms: list[str]
+    urgency: str
+    verified_elements: list[str]
+    missing_elements: list[str]
