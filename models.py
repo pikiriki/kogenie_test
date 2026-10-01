@@ -412,3 +412,12 @@ class UnifiedReviewReport(BaseModel):
     sections_requiring_work: list[str]
     research_needed: list[str]
     ready_for_approval: bool
+
+
+class RevisionPlan(BaseModel):
+    research_tasks: list[str]
+    evidence_repairs: list[str]
+    brand_repairs: list[str]
+    copy_repairs: list[str]
+    channel_repairs: list[str]
+    execution_order: list[str]
