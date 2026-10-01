@@ -122,3 +122,33 @@ def get_landing_page_spec(
             "Use one clear CTA matching the campaign objective.",
         ],
     )
+
+
+def get_x_spec(
+    objective: str,
+) -> ChannelSpec:
+
+    return ChannelSpec(
+        channel="X",
+        placement="Post / short thread",
+        objective=objective,
+        length_constraint=(
+            "Short sequential execution. Lead with one sharp "
+            "idea and develop it through a few concise posts."
+        ),
+        required_fields=[
+            "hook",
+            "posts",
+            "cta",
+        ],
+        formatting_rules=[
+            "Lead with one clear idea.",
+            "Make the hook earn the next post.",
+            "Keep one dominant creative angle.",
+            "Develop the argument sequentially.",
+            "Avoid generic thought-leadership filler.",
+            "Preserve the documented mechanism.",
+            "Do not invent proof or commercial terms.",
+            "Use one CTA matching the campaign objective.",
+        ],
+    )

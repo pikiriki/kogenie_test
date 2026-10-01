@@ -8,6 +8,7 @@ from models import (
     LandingPageDraft,
     MetaFeedAdDraft,
     SearchAdDraft,
+    XDraft,
 )
 
 
@@ -317,6 +318,93 @@ not invention.
 )
 
 
+x_writer_agent = Agent(
+    name="X Writer Agent",
+
+    instructions="""
+You are the X Writer Agent for KOgenie Copy Studio.
+
+You receive:
+- a CompleteSalesMessage
+- a CopyStrategyCard
+- a ChannelSpec
+
+Your job is to adapt the existing campaign into
+one concise X post / short thread.
+
+You are NOT creating a new campaign strategy.
+
+HOOK
+
+- Write one strong first post.
+- Preserve the selected creative angle.
+- Make the relevant reader want to continue.
+- Do not use empty clickbait.
+- Do not exaggerate merely to earn attention.
+
+POSTS
+
+- Generate exactly 3 continuation posts.
+- Each post should advance the SAME argument.
+- Do not repeat the hook three different ways.
+- Each post should make the next idea feel natural.
+- Keep the writing concise and conversational.
+- Preserve the documented mechanism where relevant.
+
+The progression should roughly be:
+
+hook
+  ↓
+recognizable problem
+  ↓
+useful distinction or explanation
+  ↓
+documented mechanism / implication
+
+CTA
+
+- Use the real campaign objective from ChannelSpec.
+- Do not invent another action.
+
+STRATEGY PRESERVATION
+
+Explain which reader problem,
+Big Idea,
+selected angle,
+and mechanism were preserved.
+
+EVIDENCE DISCIPLINE
+
+Never invent:
+- statistics
+- performance improvements
+- testimonials
+- customer counts
+- rankings
+- awards
+- proprietary technology
+- product capabilities
+- prices
+- discounts
+- trials
+- guarantees
+- deadlines
+- scarcity
+- urgency
+
+Do not turn the campaign into generic AI,
+startup, marketing, or thought-leadership commentary.
+
+The task is sequential adaptation,
+not invention.
+""",
+
+    model="gpt-6-luna",
+
+    output_type=XDraft,
+)
+
+
 def write_meta_feed_ad(
     complete_message: CompleteSalesMessage,
     strategy_card: CopyStrategyCard,
@@ -494,6 +582,56 @@ preserve proof and offer boundaries
 landing page
 
 Do not create a new campaign.
+"""
+    )
+
+    return result.final_output
+
+
+def write_x_draft(
+    complete_message: CompleteSalesMessage,
+    strategy_card: CopyStrategyCard,
+    channel_spec: ChannelSpec,
+) -> XDraft:
+
+    result = Runner.run_sync(
+        x_writer_agent,
+        f"""
+Here is the CompleteSalesMessage:
+
+{complete_message.model_dump_json(indent=2)}
+
+Here is the CopyStrategyCard:
+
+{strategy_card.model_dump_json(indent=2)}
+
+Here is the ChannelSpec:
+
+{channel_spec.model_dump_json(indent=2)}
+
+Create one XDraft.
+
+Generate:
+- one hook
+- exactly 3 continuation posts
+- one CTA
+
+Use this transformation:
+
+existing campaign
+      ↓
+one sharp idea
+      ↓
+hook
+      ↓
+short sequential argument
+      ↓
+real CTA
+
+Preserve the selected angle,
+mechanism,
+proof boundary,
+and offer boundary.
 """
     )
 

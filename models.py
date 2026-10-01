@@ -292,3 +292,11 @@ class LandingPageDraft(BaseModel):
     cta: str
     strategy_preserved: str
     evidence_check: str
+
+
+class XDraft(BaseModel):
+    hook: str
+    posts: list[str]
+    cta: str
+    strategy_preserved: str
+    evidence_check: str
