@@ -244,3 +244,12 @@ class CopyStrategyCard(BaseModel):
     proof_boundary: list[str]
     offer_boundary: list[str]
     final_message: str
+
+
+class ChannelSpec(BaseModel):
+    channel: str
+    placement: str
+    objective: str
+    length_constraint: str
+    required_fields: list[str]
+    formatting_rules: list[str]
