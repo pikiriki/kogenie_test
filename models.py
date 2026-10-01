@@ -137,3 +137,13 @@ class OfferStrategy(BaseModel):
     urgency: str
     verified_elements: list[str]
     missing_elements: list[str]
+
+
+class BigIdeaHypothesis(BaseModel):
+    reader_problem: str
+    deeper_desire: str
+    mechanism: str
+    central_thought: str
+    promise_boundary: str
+    supporting_evidence: list[str]
+    confidence: str

@@ -2,6 +2,7 @@ from agents import Agent, Runner
 
 from models import (
     AwarenessHypothesis,
+    BigIdeaHypothesis,
     DesireHypothesis,
     DesireIntensity,
     MechanismHypothesis,
@@ -604,6 +605,68 @@ Do not make the offer sound more generous than it is.
 )
 
 
+big_idea_strategy_agent = Agent(
+    name="Big Idea Strategy Agent",
+
+    instructions="""
+You are the Big Idea Strategy Agent for KOgenie Copy Studio.
+
+You receive:
+- a ReaderProfile
+- a DesireHypothesis
+- a MechanismHypothesis
+- a MessageEntryPoint
+- a SophisticationHypothesis
+- an ObjectionMap
+
+Your job is to compress the strategy into ONE central
+organizing thought for the future sales message.
+
+The Big Idea should connect:
+
+reader problem
++
+deeper desire
++
+mechanism
++
+strongest evidence-supported promise
+
+Rules:
+
+- Produce one BigIdeaHypothesis.
+- The central_thought must express one coherent idea,
+  not a list of unrelated benefits.
+- Use the reader's real problem.
+- Use the documented mechanism.
+- Keep the promise inside the evidence.
+- Do not invent numerical improvements.
+- Do not invent outcomes such as higher ROAS,
+  lower CAC, or better conversion rates unless they
+  are explicitly supported.
+- Consider market sophistication:
+  if generic claims are already common, the central
+  thought should rely more on the mechanism or a
+  clearer interpretation of the problem.
+- Consider objections:
+  the Big Idea should not depend on claims for which
+  the required proof is missing.
+- Keep customer quotations separate from your own strategy.
+
+Do not:
+- write a headline
+- write body copy
+- create multiple angles
+- invent an offer
+- invent urgency
+""",
+
+    model="gpt-6-luna",
+
+    output_type=BigIdeaHypothesis,
+)
+
+
 def build_reader_profile(
     research_document: ResearchDocument
 ) -> ReaderProfile:
@@ -952,6 +1015,66 @@ Anything not explicitly supported by the research
 or supplied commercial terms must be marked missing.
 
 Do not fill missing fields with persuasive guesses.
+"""
+    )
+
+    return result.final_output
+
+
+def build_big_idea(
+    reader_profile: ReaderProfile,
+    desire_hypothesis: DesireHypothesis,
+    mechanism_hypothesis: MechanismHypothesis,
+    message_entry_point: MessageEntryPoint,
+    sophistication_hypothesis: SophisticationHypothesis,
+    objection_map: ObjectionMap,
+) -> BigIdeaHypothesis:
+
+    result = Runner.run_sync(
+        big_idea_strategy_agent,
+        f"""
+Here is the ReaderProfile:
+
+{reader_profile.model_dump_json(indent=2)}
+
+Here is the DesireHypothesis:
+
+{desire_hypothesis.model_dump_json(indent=2)}
+
+Here is the MechanismHypothesis:
+
+{mechanism_hypothesis.model_dump_json(indent=2)}
+
+Here is the MessageEntryPoint:
+
+{message_entry_point.model_dump_json(indent=2)}
+
+Here is the SophisticationHypothesis:
+
+{sophistication_hypothesis.model_dump_json(indent=2)}
+
+Here is the ObjectionMap:
+
+{objection_map.model_dump_json(indent=2)}
+
+Create one BigIdeaHypothesis.
+
+Use this compression:
+
+reader problem
++
+deeper desire
++
+documented mechanism
++
+strongest defensible promise
+        ↓
+one central thought
+
+The central thought should help the reader see the
+problem or product in a useful new way.
+
+Stay inside the evidence.
 """
     )
 
