@@ -385,3 +385,11 @@ class ClaimEvidenceReport(BaseModel):
     claims: list[ClaimReview]
     unsupported_claims: list[str]
     revision_needed: bool
+
+
+class ClaimRepairResult(BaseModel):
+    section: str
+    original_claim: str
+    repaired_claim: str
+    action_taken: str
+    evidence_preserved: list[str]
