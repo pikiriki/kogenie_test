@@ -218,3 +218,13 @@ class OfferSectionDraft(BaseModel):
     urgency_used: str
     cta: str
     evidence_check: str
+
+
+class CompleteSalesMessage(BaseModel):
+    headline: str
+    opening: str
+    mechanism_section: str
+    proof_section: str
+    objection_section: str
+    offer_section: str
+    full_copy: str

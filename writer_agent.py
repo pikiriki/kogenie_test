@@ -2,6 +2,7 @@ from agents import Agent, Runner
 
 from models import (
     BigIdeaHypothesis,
+    CompleteSalesMessage,
     CreativeAngle,
     HeadlineCandidate,
     HeadlineCandidateSet,
@@ -454,6 +455,102 @@ This is the closing action section.
 )
 
 
+sales_message_assembler_agent = Agent(
+    name="Sales Message Assembler Agent",
+
+    instructions="""
+You are the Sales Message Assembler Agent
+for KOgenie Copy Studio.
+
+You receive completed copy sections:
+
+- one selected headline
+- an opening
+- a mechanism section
+- a proof section
+- an objection section
+- an offer and CTA section
+
+Your job is to turn those existing sections into
+one coherent sales message.
+
+You are an EDITOR, not a new strategist.
+
+PRIMARY GOALS:
+
+1. Preserve the strategic meaning of every section.
+2. Remove unnecessary repetition.
+3. Improve transitions between sections.
+4. Make the complete message feel like one continuous argument.
+5. Preserve all evidence and commercial boundaries.
+
+CRITICAL RULES:
+
+Do NOT introduce:
+- new product capabilities
+- new performance claims
+- new statistics
+- new testimonials
+- new case studies
+- new mechanisms
+- new prices
+- new discounts
+- new bonuses
+- new guarantees
+- new trials
+- new deadlines
+- new scarcity
+- new urgency
+
+Do NOT strengthen an existing claim beyond
+what the supplied section says.
+
+If an objection was unresolved,
+do not quietly convert it into an answered objection.
+
+If proof was marked missing,
+do not manufacture proof while editing.
+
+If no risk reversal exists,
+do not create one.
+
+HEADLINE:
+- Preserve the selected headline exactly.
+
+OPENING:
+- Preserve its recognition function.
+- You may lightly edit wording for flow.
+
+MECHANISM:
+- Preserve the documented causal explanation.
+
+PROOF:
+- Preserve the distinction between existing proof
+  and missing proof.
+
+OBJECTIONS:
+- Preserve uncertainty and unresolved issues.
+
+OFFER:
+- Preserve actual supplied terms exactly.
+- Preserve the real CTA.
+- Do not add urgency.
+
+FULL COPY:
+- Join all sections into one natural message.
+- Remove redundant sentences.
+- Add simple transitions when useful.
+- Do not add factual content merely to improve flow.
+
+Return a CompleteSalesMessage.
+""",
+
+    model="gpt-6-luna",
+
+    output_type=CompleteSalesMessage,
+)
+
+
 def generate_headline_candidates(
     reader_profile: ReaderProfile,
     big_idea: BigIdeaHypothesis,
@@ -732,6 +829,74 @@ real urgency if available
 clear next action
 
 Anything missing must remain missing.
+"""
+    )
+
+    return result.final_output
+
+
+def assemble_sales_message(
+    selected_headline: HeadlineCandidate,
+    opening: OpeningDraft,
+    mechanism_section: MechanismSectionDraft,
+    proof_section: ProofSectionDraft,
+    objection_section: ObjectionSectionDraft,
+    offer_section: OfferSectionDraft,
+) -> CompleteSalesMessage:
+
+    result = Runner.run_sync(
+        sales_message_assembler_agent,
+        f"""
+Here is the selected HeadlineCandidate:
+
+{selected_headline.model_dump_json(indent=2)}
+
+Here is the OpeningDraft:
+
+{opening.model_dump_json(indent=2)}
+
+Here is the MechanismSectionDraft:
+
+{mechanism_section.model_dump_json(indent=2)}
+
+Here is the ProofSectionDraft:
+
+{proof_section.model_dump_json(indent=2)}
+
+Here is the ObjectionSectionDraft:
+
+{objection_section.model_dump_json(indent=2)}
+
+Here is the OfferSectionDraft:
+
+{offer_section.model_dump_json(indent=2)}
+
+Assemble these existing sections into one
+CompleteSalesMessage.
+
+Use this flow:
+
+headline
+   ↓
+recognition
+   ↓
+problem
+   ↓
+mechanism
+   ↓
+proof
+   ↓
+objections
+   ↓
+offer
+   ↓
+CTA
+
+Remove unnecessary repetition.
+
+Improve transitions.
+
+Do not add new factual or commercial claims.
 """
     )
 
