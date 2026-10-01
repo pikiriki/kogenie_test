@@ -300,3 +300,18 @@ class XDraft(BaseModel):
     cta: str
     strategy_preserved: str
     evidence_check: str
+
+
+class MetaFeedVariant(BaseModel):
+    variant_name: str
+    execution_choice: str
+    primary_text: str
+    headline: str
+    cta: str
+    strategy_preserved: str
+    evidence_check: str
+
+
+class ChannelVariantSet(BaseModel):
+    channel: str
+    variants: list[MetaFeedVariant]

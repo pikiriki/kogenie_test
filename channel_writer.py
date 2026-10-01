@@ -2,6 +2,7 @@ from agents import Agent, Runner
 
 from models import (
     ChannelSpec,
+    ChannelVariantSet,
     CompleteSalesMessage,
     CopyStrategyCard,
     EmailDraft,
@@ -405,6 +406,113 @@ not invention.
 )
 
 
+meta_variant_writer_agent = Agent(
+    name="Meta Variant Writer Agent",
+
+    instructions="""
+You are the Meta Variant Writer Agent
+for KOgenie Copy Studio.
+
+You receive:
+- a CompleteSalesMessage
+- a CopyStrategyCard
+- a Meta ChannelSpec
+
+Your job is to create exactly 3 Meta feed variants.
+
+CRITICAL EXPERIMENT RULE:
+
+All variants must preserve the SAME:
+
+- reader
+- primary problem
+- Big Idea
+- selected creative angle
+- documented mechanism
+- proof boundary
+- offer boundary
+- campaign objective
+- CTA
+
+Only EXECUTION may vary.
+
+You may vary:
+
+- opening style
+- wording
+- sentence rhythm
+- information order
+- directness
+- which part of the SAME angle appears first
+
+You must NOT vary:
+
+- target reader
+- underlying promise
+- product mechanism
+- campaign objective
+- offer
+- proof claims
+- strategic angle
+
+VARIANT A:
+Use a recognition-led execution.
+
+VARIANT B:
+Use a contrast-led execution.
+
+VARIANT C:
+Use a mechanism-led execution.
+
+Each variant must include:
+
+variant_name
+- "Variant A", "Variant B", or "Variant C"
+
+execution_choice
+- explain the execution difference
+
+primary_text
+- concise Meta feed copy
+
+headline
+- concise headline faithful to the same angle
+
+cta
+- use the actual ChannelSpec objective
+
+strategy_preserved
+- explain what remained strategically fixed
+
+evidence_check
+- confirm that no unsupported claim was introduced
+
+Never invent:
+- statistics
+- performance improvements
+- time savings
+- testimonials
+- rankings
+- awards
+- prices
+- discounts
+- trials
+- guarantees
+- urgency
+- scarcity
+- product capabilities
+
+Do not create three different campaigns.
+
+Create three executions of ONE campaign.
+""",
+
+    model="gpt-6-luna",
+
+    output_type=ChannelVariantSet,
+)
+
+
 def write_meta_feed_ad(
     complete_message: CompleteSalesMessage,
     strategy_card: CopyStrategyCard,
@@ -632,6 +740,60 @@ Preserve the selected angle,
 mechanism,
 proof boundary,
 and offer boundary.
+"""
+    )
+
+    return result.final_output
+
+
+def generate_meta_variants(
+    complete_message: CompleteSalesMessage,
+    strategy_card: CopyStrategyCard,
+    channel_spec: ChannelSpec,
+) -> ChannelVariantSet:
+
+    result = Runner.run_sync(
+        meta_variant_writer_agent,
+        f"""
+Here is the CompleteSalesMessage:
+
+{complete_message.model_dump_json(indent=2)}
+
+Here is the CopyStrategyCard:
+
+{strategy_card.model_dump_json(indent=2)}
+
+Here is the ChannelSpec:
+
+{channel_spec.model_dump_json(indent=2)}
+
+Generate exactly 3 Meta feed variants.
+
+The experiment must follow:
+
+FIXED:
+reader
+Big Idea
+selected angle
+mechanism
+evidence boundary
+offer boundary
+objective
+CTA
+
+VARIABLE:
+execution style only
+
+Variant A:
+recognition-led
+
+Variant B:
+contrast-led
+
+Variant C:
+mechanism-led
+
+Return one ChannelVariantSet.
 """
     )
 
