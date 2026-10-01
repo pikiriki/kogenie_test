@@ -324,3 +324,21 @@ class CampaignPack(BaseModel):
     email: EmailDraft
     landing_page: LandingPageDraft
     x: XDraft
+
+
+class ChannelReview(BaseModel):
+    channel: str
+    strategy_alignment: str
+    drift_found: list[str]
+    unsupported_claims: list[str]
+    cta_conflict: str
+    revision_needed: bool
+
+
+class ChannelConsistencyReport(BaseModel):
+    shared_strategy: str
+    channel_findings: list[ChannelReview]
+    strategy_drift: list[str]
+    unsupported_claims: list[str]
+    cta_conflicts: list[str]
+    revision_needed: bool
