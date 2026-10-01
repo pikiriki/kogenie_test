@@ -108,6 +108,30 @@ Each instruction should:
 
 Do not write replacement copy.
 
+SECTIONS TO REVISE
+
+Return a sections_to_revise list.
+
+Use ONLY these exact section names:
+
+- headline
+- opening
+- mechanism_section
+- proof_section
+- objection_section
+- offer_section
+
+Include a section only when it has a meaningful
+problem that requires textual revision.
+
+Do not include a section merely because you could
+personally rewrite it differently.
+
+If no section requires revision, return an empty list.
+
+The list is used by deterministic Python routing,
+so use the exact names above.
+
 IMPORTANT:
 
 This is not a cross-channel consistency review.

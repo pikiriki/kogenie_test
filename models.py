@@ -357,3 +357,16 @@ class CopyCritique(BaseModel):
     repetition_issues: list[str]
     weak_sections: list[str]
     revision_instructions: list[str]
+    sections_to_revise: list[str]
+
+
+class RevisedSalesMessage(BaseModel):
+    headline: str
+    opening: str
+    mechanism_section: str
+    proof_section: str
+    objection_section: str
+    offer_section: str
+    full_copy: str
+    revised_sections: list[str]
+    preserved_sections: list[str]
