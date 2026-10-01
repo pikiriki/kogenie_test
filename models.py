@@ -253,3 +253,11 @@ class ChannelSpec(BaseModel):
     length_constraint: str
     required_fields: list[str]
     formatting_rules: list[str]
+
+
+class MetaFeedAdDraft(BaseModel):
+    primary_text: str
+    headline: str
+    cta: str
+    strategy_preserved: str
+    evidence_check: str
