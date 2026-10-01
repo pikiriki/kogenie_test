@@ -4,6 +4,7 @@ from models import (
     ChannelSpec,
     CompleteSalesMessage,
     CopyStrategyCard,
+    EmailDraft,
     MetaFeedAdDraft,
     SearchAdDraft,
 )
@@ -157,6 +158,92 @@ to expressed search intent without changing its facts.
 )
 
 
+email_writer_agent = Agent(
+    name="Email Writer Agent",
+
+    instructions="""
+You are the Email Writer Agent for KOgenie Copy Studio.
+
+You receive:
+- a CompleteSalesMessage
+- a CopyStrategyCard
+- a ChannelSpec
+
+Your job is to adapt the existing campaign into
+one concise email.
+
+You are NOT creating a new campaign strategy.
+
+SUBJECT LINES
+
+Generate exactly 3 subject-line options.
+
+Each subject should:
+- remain faithful to the selected creative angle
+- create a reason for the intended reader to open
+- avoid empty clickbait
+- avoid unsupported promises
+- avoid fabricated urgency
+
+PREVIEW TEXT
+
+- Write one concise preview line.
+- Extend the subject idea rather than simply repeating it.
+- Preserve the campaign strategy.
+
+BODY
+
+- Keep one dominant argument.
+- Begin with a recognizable reader situation.
+- Make the first sentence create a reason to continue.
+- Preserve the selected angle.
+- Explain the documented mechanism simply.
+- Use proof only when it actually exists.
+- Keep the email concise.
+- Do not reproduce every section of the long-form message.
+
+CTA
+
+- Use the actual objective supplied by ChannelSpec.
+- Do not invent another action.
+
+STRATEGY PRESERVATION
+
+Explain which reader problem, Big Idea,
+creative angle, and mechanism were preserved.
+
+EVIDENCE DISCIPLINE
+
+Never invent:
+- statistics
+- performance improvements
+- testimonials
+- customer counts
+- awards
+- rankings
+- product capabilities
+- prices
+- discounts
+- free trials
+- bonuses
+- guarantees
+- deadlines
+- scarcity
+- urgency
+
+If evidence is missing in the original campaign,
+it remains missing in the email.
+
+The task is adaptation and compression,
+not invention.
+""",
+
+    model="gpt-6-luna",
+
+    output_type=EmailDraft,
+)
+
+
 def write_meta_feed_ad(
     complete_message: CompleteSalesMessage,
     strategy_card: CopyStrategyCard,
@@ -242,6 +329,54 @@ Generate:
 - one CTA
 
 Preserve the strategy and evidence boundaries.
+"""
+    )
+
+    return result.final_output
+
+
+def write_email(
+    complete_message: CompleteSalesMessage,
+    strategy_card: CopyStrategyCard,
+    channel_spec: ChannelSpec,
+) -> EmailDraft:
+
+    result = Runner.run_sync(
+        email_writer_agent,
+        f"""
+Here is the CompleteSalesMessage:
+
+{complete_message.model_dump_json(indent=2)}
+
+Here is the CopyStrategyCard:
+
+{strategy_card.model_dump_json(indent=2)}
+
+Here is the ChannelSpec:
+
+{channel_spec.model_dump_json(indent=2)}
+
+Create one EmailDraft.
+
+Generate:
+- exactly 3 subject lines
+- one preview text
+- one concise body
+- one CTA
+
+Use this transformation:
+
+existing campaign strategy
+        ↓
+subject earns open
+        ↓
+opening earns continued reading
+        ↓
+one focused argument
+        ↓
+real CTA
+
+Preserve evidence and offer boundaries.
 """
     )
 

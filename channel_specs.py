@@ -56,3 +56,34 @@ def get_google_search_spec(
             "Use a CTA matching the real campaign objective.",
         ],
     )
+
+
+def get_email_spec(
+    objective: str,
+) -> ChannelSpec:
+
+    return ChannelSpec(
+        channel="Email",
+        placement="Campaign email",
+        objective=objective,
+        length_constraint=(
+            "Concise email execution. Use a short subject line, "
+            "brief preview text, and one focused body argument."
+        ),
+        required_fields=[
+            "subject_lines",
+            "preview_text",
+            "body",
+            "cta",
+        ],
+        formatting_rules=[
+            "Generate three subject-line options.",
+            "Make the subject earn the open without clickbait.",
+            "Use preview text to extend rather than merely repeat the subject.",
+            "Keep one dominant campaign argument.",
+            "Make the opening easy to continue reading.",
+            "Preserve the documented mechanism.",
+            "Do not invent proof or commercial terms.",
+            "Use one clear CTA matching the objective.",
+        ],
+    )

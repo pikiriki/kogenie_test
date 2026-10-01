@@ -270,3 +270,12 @@ class SearchAdDraft(BaseModel):
     intent_connection: str
     strategy_preserved: str
     evidence_check: str
+
+
+class EmailDraft(BaseModel):
+    subject_lines: list[str]
+    preview_text: str
+    body: str
+    cta: str
+    strategy_preserved: str
+    evidence_check: str
