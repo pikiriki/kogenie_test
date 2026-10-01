@@ -640,3 +640,57 @@ def get_approval_record(
         ),
         approved_at=row["approved_at"],
     )
+
+
+def get_latest_approved_record(
+    campaign_id: int,
+) -> ApprovalRecord | None:
+
+    connection = sqlite3.connect(DATABASE_NAME)
+
+    connection.row_factory = sqlite3.Row
+
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        SELECT
+            id,
+            campaign_id,
+            status,
+            reviewer,
+            note,
+            approved_message_snapshot,
+            approved_at
+
+        FROM approval_records
+
+        WHERE
+            campaign_id = ?
+            AND status = 'approved'
+
+        ORDER BY id DESC
+
+        LIMIT 1
+        """,
+        (campaign_id,),
+    )
+
+    row = cursor.fetchone()
+
+    connection.close()
+
+    if row is None:
+        return None
+
+    return ApprovalRecord(
+        id=row["id"],
+        campaign_id=row["campaign_id"],
+        status=row["status"],
+        reviewer=row["reviewer"],
+        note=row["note"],
+        approved_message_snapshot=(
+            row["approved_message_snapshot"]
+        ),
+        approved_at=row["approved_at"],
+    )

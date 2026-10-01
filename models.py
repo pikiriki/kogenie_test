@@ -447,3 +447,12 @@ class ApprovalRecord(BaseModel):
     note: str
     approved_message_snapshot: str
     approved_at: str | None = None
+
+
+class CampaignMemory(BaseModel):
+    campaign_id: int
+    approved_angle: str
+    approved_big_idea: str
+    approved_message: str
+    evidence_boundaries: list[str]
+    outcome_context: str
