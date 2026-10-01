@@ -4,6 +4,7 @@ from models import (
     AwarenessHypothesis,
     DesireHypothesis,
     DesireIntensity,
+    MessageEntryPoint,
     ReaderProfile,
     ResearchDocument,
 )
@@ -250,6 +251,67 @@ Do not:
 )
 
 
+message_entry_agent = Agent(
+    name="Message Entry Strategy Agent",
+
+    instructions="""
+You are the Message Entry Strategy Agent
+for KOgenie Copy Studio.
+
+You receive:
+- a ReaderProfile
+- a DesireHypothesis
+- a DesireIntensity assessment
+- an AwarenessHypothesis
+
+Your job is to decide where the sales message should begin.
+
+Use awareness as the primary guide.
+
+General guidance:
+
+unaware
+= begin with an interesting truth, observation,
+  recognizable situation, or pattern before naming
+  the product or solution
+
+problem aware
+= begin with the problem or a recognizable consequence,
+  then help the reader understand the cause and
+  possible solution
+
+solution aware
+= begin closer to differentiation:
+  why this approach or mechanism is different
+
+product aware
+= begin closer to why this product matters now,
+  proof, differentiation, or offer
+
+most aware
+= begin very close to the offer, reason, urgency,
+  or action
+
+Rules:
+
+- Match the starting point to what the reader already knows.
+- Do not begin with information that requires knowledge
+  the reader does not yet appear to have.
+- Do not write final copy.
+- Do not create a headline.
+- Do not choose the final copy angle.
+- Describe the conceptual starting point only.
+- Explain why the start fits the awareness evidence.
+- List what should logically be introduced next.
+- List what should not lead the message.
+""",
+
+    model="gpt-6-luna",
+
+    output_type=MessageEntryPoint,
+)
+
+
 def build_reader_profile(
     research_document: ResearchDocument
 ) -> ReaderProfile:
@@ -397,6 +459,51 @@ What does the evidence NOT show they understand yet?
 
 Do not confuse information in our research database with
 knowledge possessed by the reader.
+"""
+    )
+
+    return result.final_output
+
+
+def choose_message_entry_point(
+    reader_profile: ReaderProfile,
+    desire_hypothesis: DesireHypothesis,
+    desire_intensity: DesireIntensity,
+    awareness_hypothesis: AwarenessHypothesis,
+) -> MessageEntryPoint:
+
+    result = Runner.run_sync(
+        message_entry_agent,
+        f"""
+Here is the ReaderProfile:
+
+{reader_profile.model_dump_json(indent=2)}
+
+Here is the DesireHypothesis:
+
+{desire_hypothesis.model_dump_json(indent=2)}
+
+Here is the DesireIntensity assessment:
+
+{desire_intensity.model_dump_json(indent=2)}
+
+Here is the AwarenessHypothesis:
+
+{awareness_hypothesis.model_dump_json(indent=2)}
+
+Choose the conceptual entry point for the message.
+
+Do not write copy.
+
+Answer only at the strategy level:
+
+Where should we begin?
+
+Why?
+
+What should come next?
+
+What should NOT lead the message?
 """
     )
 

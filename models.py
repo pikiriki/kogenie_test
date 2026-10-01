@@ -88,3 +88,10 @@ class AwarenessHypothesis(BaseModel):
     what_the_reader_does_not_yet_know: list[str]
     supporting_evidence: list[str]
     confidence: str
+
+
+class MessageEntryPoint(BaseModel):
+    starting_point: str
+    why_this_start: str
+    information_to_introduce_next: list[str]
+    information_to_avoid_leading_with: list[str]
