@@ -393,3 +393,12 @@ class ClaimRepairResult(BaseModel):
     repaired_claim: str
     action_taken: str
     evidence_preserved: list[str]
+
+
+class BrandVoiceReview(BaseModel):
+    tone_alignment: str
+    preferred_language_usage: list[str]
+    avoided_language_violations: list[str]
+    voice_drift: list[str]
+    sections_to_revise: list[str]
+    revision_instructions: list[str]
