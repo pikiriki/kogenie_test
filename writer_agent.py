@@ -9,6 +9,8 @@ from models import (
     MechanismSectionDraft,
     MessageEntryPoint,
     ObjectionMap,
+    ObjectionSectionDraft,
+    OfferStrategy,
     OpeningDraft,
     ProofSectionDraft,
     ReaderProfile,
@@ -310,6 +312,80 @@ Do not write the offer or CTA yet.
 )
 
 
+objection_writer_agent = Agent(
+    name="Objection Section Writer Agent",
+
+    instructions="""
+You are the Objection Section Writer Agent
+for KOgenie Copy Studio.
+
+You receive:
+- an ObjectionMap
+- a ProofSectionDraft
+- an OfferStrategy
+- a MechanismHypothesis
+
+Your job is to answer objections only as far as
+the available evidence allows.
+
+For every objection:
+
+1. objection
+   - Preserve the actual concern.
+
+2. answer
+   - Give the clearest evidence-supported answer.
+   - Do not exaggerate.
+
+3. proof_used
+   - List the actual proof supporting the answer.
+   - Do not list proof that does not exist.
+
+4. status
+   Use exactly:
+   - answered
+   - partially answered
+   - unresolved
+
+CRITICAL RULES:
+
+- Never invent testimonials.
+- Never invent statistics.
+- Never invent case studies.
+- Never invent product capabilities.
+- Never invent a free trial.
+- Never invent a guarantee.
+- Never invent a refund policy.
+- Never invent pricing.
+- Never invent urgency or scarcity.
+
+RISK REVERSAL:
+
+- Use only risk reversal explicitly present
+  in the OfferStrategy.
+- If no guarantee, trial, refund policy, or similar
+  mechanism exists, state:
+  "No verified risk reversal is currently available."
+
+UNRESOLVED OBJECTIONS:
+
+- Preserve objections that cannot yet be credibly answered.
+- Do not disguise missing evidence with confident language.
+
+OBJECTION COPY:
+
+- Write a concise section that addresses only objections
+  we can answer or partially answer honestly.
+- Do not pretend unresolved objections have been solved.
+- Do not write the final offer or CTA yet.
+""",
+
+    model="gpt-6-luna",
+
+    output_type=ObjectionSectionDraft,
+)
+
+
 def generate_headline_candidates(
     reader_profile: ReaderProfile,
     big_idea: BigIdeaHypothesis,
@@ -501,6 +577,51 @@ safe proof copy
 Then separately state what additional proof is missing.
 
 Never fabricate evidence.
+"""
+    )
+
+    return result.final_output
+
+
+def write_objection_section(
+    objection_map: ObjectionMap,
+    proof_section: ProofSectionDraft,
+    offer_strategy: OfferStrategy,
+    mechanism_hypothesis: MechanismHypothesis,
+) -> ObjectionSectionDraft:
+
+    result = Runner.run_sync(
+        objection_writer_agent,
+        f"""
+Here is the ObjectionMap:
+
+{objection_map.model_dump_json(indent=2)}
+
+Here is the ProofSectionDraft:
+
+{proof_section.model_dump_json(indent=2)}
+
+Here is the OfferStrategy:
+
+{offer_strategy.model_dump_json(indent=2)}
+
+Here is the MechanismHypothesis:
+
+{mechanism_hypothesis.model_dump_json(indent=2)}
+
+Handle the objections honestly.
+
+For each objection:
+
+objection
+   ↓
+what evidence answers it?
+   ↓
+answer only that far
+   ↓
+answered / partially answered / unresolved
+
+Do not fill evidence gaps with persuasive invention.
 """
     )
 

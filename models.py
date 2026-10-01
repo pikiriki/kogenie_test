@@ -196,3 +196,17 @@ class ProofSectionDraft(BaseModel):
     verified_claims_used: list[str]
     missing_proof: list[str]
     proof_copy: str
+
+
+class ObjectionResponse(BaseModel):
+    objection: str
+    answer: str
+    proof_used: list[str]
+    status: str
+
+
+class ObjectionSectionDraft(BaseModel):
+    objection_responses: list[ObjectionResponse]
+    unresolved_objections: list[str]
+    risk_reversal_available: str
+    objection_copy: str
