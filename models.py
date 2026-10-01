@@ -315,3 +315,12 @@ class MetaFeedVariant(BaseModel):
 class ChannelVariantSet(BaseModel):
     channel: str
     variants: list[MetaFeedVariant]
+
+
+class CampaignPack(BaseModel):
+    strategy_card: CopyStrategyCard
+    meta: MetaFeedAdDraft
+    search: SearchAdDraft
+    email: EmailDraft
+    landing_page: LandingPageDraft
+    x: XDraft
