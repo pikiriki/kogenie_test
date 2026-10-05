@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import BaseModel
 
 
@@ -612,3 +614,40 @@ class GeneratedVisual(BaseModel):
     created_at: str
 
     approval_status: str
+
+
+class VisualReviewReport(BaseModel):
+    objective_alignment: Literal[
+        "aligned",
+        "partially aligned",
+        "misaligned",
+    ]
+
+    required_elements_present: list[str]
+
+    missing_elements: list[str]
+
+    text_accuracy: Literal[
+        "accurate",
+        "partially accurate",
+        "inaccurate",
+        "unreadable",
+    ]
+
+    composition_alignment: Literal[
+        "aligned",
+        "partially aligned",
+        "misaligned",
+    ]
+
+    style_alignment: Literal[
+        "aligned",
+        "partially aligned",
+        "misaligned",
+    ]
+
+    evidence_violations: list[str]
+
+    negative_constraint_violations: list[str]
+
+    revision_needed: bool
