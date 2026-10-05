@@ -1085,3 +1085,22 @@ class RuntimeHealth(BaseModel):
     missing_requirements: list[str]
 
     ready: bool
+
+
+class ExternalServiceHealth(BaseModel):
+    openai_api_ok: bool
+
+    text_model_access_ok: bool
+    vision_model_access_ok: bool
+    image_model_access_ok: bool
+
+    vector_store_ok: bool
+
+    text_inference_ok: bool
+
+    failures: list[str]
+    warnings: list[str]
+
+    checked_at: str
+
+    ready: bool

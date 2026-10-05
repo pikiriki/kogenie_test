@@ -56,6 +56,65 @@ st.caption(
     "Runtime health: ready"
 )
 
+if st.button(
+    "Run remote diagnostics"
+):
+
+    # Imported here (not at the top) so a missing
+    # OPENAI_API_KEY is reported by the runtime health
+    # gate above instead of crashing app startup when
+    # external_health creates its OpenAI client.
+    from external_health import (
+        probe_external_services,
+    )
+
+    with st.spinner(
+        "Checking remote dependencies..."
+    ):
+
+        st.session_state[
+            "external_service_health"
+        ] = (
+            probe_external_services()
+        )
+
+remote_health = (
+    st.session_state.get(
+        "external_service_health"
+    )
+)
+
+if remote_health is not None:
+
+    if remote_health.ready:
+
+        st.success(
+            "Remote dependency probes passed."
+        )
+
+    else:
+
+        st.error(
+            "One or more remote dependency "
+            "probes failed."
+        )
+
+    for failure in (
+        remote_health.failures
+    ):
+
+        st.write(
+            f"- {failure}"
+        )
+
+    for warning in (
+        remote_health.warnings
+    ):
+
+        st.warning(
+            warning
+        )
+
 if "current_brief" not in st.session_state:
     st.session_state.current_brief = None
 
