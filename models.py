@@ -904,3 +904,26 @@ class PerformanceAnalysis(BaseModel):
         "medium",
         "high",
     ]
+
+
+class CreativeOutcomeLink(BaseModel):
+    campaign_id: int
+
+    outcome_id: int | None
+    outcome_channel: str
+
+    approved_angle: str
+    approved_big_idea: str
+
+    approved_visual_asset_ids: list[int]
+
+    outcome_snapshot: OutcomeEvidenceSnapshot
+
+    performance_analysis: PerformanceAnalysis
+
+    relationship_status: Literal[
+        "campaign_strategy_context",
+        "campaign_strategy_and_channel_visual_context",
+    ]
+
+    causal_boundary: list[str]
