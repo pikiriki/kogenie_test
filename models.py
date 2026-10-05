@@ -581,11 +581,34 @@ class VisualStyleSpec(BaseModel):
 
 class VisualGenerationSpec(BaseModel):
     objective: str
+
+    width: int
+    height: int
     canvas: str
+
     required_elements: list[str]
     text_to_render: list[str]
+
     composition: str
     style: str
+
     evidence_constraints: list[str]
     negative_constraints: list[str]
+
     generation_instruction: str
+
+
+class GeneratedVisual(BaseModel):
+    campaign_id: int
+
+    image_path: str
+    metadata_path: str
+
+    generation_spec_snapshot: str
+
+    channel: str
+    model: str
+
+    created_at: str
+
+    approval_status: str

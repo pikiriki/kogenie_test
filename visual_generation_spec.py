@@ -206,6 +206,8 @@ It must not create a new campaign strategy.
 
     return VisualGenerationSpec(
         objective=visual_brief.visual_job,
+        width=width,
+        height=height,
         canvas=canvas,
         required_elements=required_elements,
         text_to_render=text_to_render,

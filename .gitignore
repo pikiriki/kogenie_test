@@ -16,3 +16,6 @@ __pycache__/
 
 # Private research material
 knowledge/
+
+# Generated visual artifacts (runtime output)
+generated_visuals/
