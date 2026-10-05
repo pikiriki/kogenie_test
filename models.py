@@ -758,3 +758,19 @@ class VisualSimilarityReport(BaseModel):
     revision_needed: bool
 
     history_note: str
+
+
+class VisualNoveltyGuidance(BaseModel):
+    preserve_strategy: list[str]
+
+    overused_visual_patterns: list[str]
+
+    unexplored_visual_metaphors: list[str]
+
+    unexplored_compositions: list[str]
+
+    evidence_boundaries: list[str]
+
+    prohibited_shortcuts: list[str]
+
+    visual_direction_options: list[str]

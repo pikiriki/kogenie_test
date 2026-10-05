@@ -4,7 +4,7 @@ A simple browser interface for building an AI-assisted copywriting workflow.
 
 ## Current version
 
-Version 9 — Campaign Memory and Strategic Novelty
+Version 10 — Visual Creative System
 
 ## What the app currently does
 
@@ -174,6 +174,50 @@ Approved does not mean successful.
 A new strategy must still pass evidence review,
 copy review, brand review, channel review,
 and fresh human approval before it becomes trusted memory.
+
+## Version 10 — Visual Creative System
+
+Version 10 extends campaign strategy into visual execution.
+
+The system now supports:
+
+- visual creative briefs
+- separation of visual meaning from visual style
+- structured visual generation specifications
+- real image generation
+- generated-image provenance
+- automated visual review
+- targeted one-pass visual repair
+- immutable human visual approval
+- SHA-256 visual identity
+- approved visual snapshots
+- persistent visual asset history
+- exact duplicate detection
+- semantic visual repetition review
+- evidence-grounded visual novelty guidance
+
+Visual architecture:
+
+Campaign strategy
+→ visual creative brief
+→ visual style specification
+→ visual generation specification
+→ generated visual
+→ automated visual review
+→ bounded repair
+→ visual repetition review
+→ human approval
+→ approved VisualAsset
+
+Core principles:
+
+1. Generated does not mean approved.
+2. Automated review does not mean human approval.
+3. Visual approval belongs to exact image bytes.
+4. Editing an approved image creates a new unapproved artifact.
+5. Visual novelty must not change product truth or evidence.
+6. Different styling does not automatically mean a different visual idea.
+7. Approved visual history does not prove campaign performance.
 
 ## Current limitation
 
