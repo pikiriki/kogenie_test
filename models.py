@@ -473,3 +473,12 @@ class RepetitionReport(BaseModel):
     repeated_patterns: list[str]
     novelty_gaps: list[str]
     revision_needed: bool
+
+
+class NoveltyGuidance(BaseModel):
+    what_must_stay_fixed: list[str]
+    overused_patterns: list[str]
+    unexplored_reader_tensions: list[str]
+    unexplored_mechanism_emphases: list[str]
+    forbidden_shortcuts: list[str]
+    strategy_guidance: list[str]
