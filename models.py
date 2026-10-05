@@ -1118,3 +1118,25 @@ class SmokeTestReport(BaseModel):
     failures: list[str]
 
     passed: bool
+
+
+class WorkflowRun(BaseModel):
+    run_id: str
+
+    workflow_name: str
+
+    started_at: str
+
+    completed_at: str | None = None
+
+    status: Literal[
+        "running",
+        "completed",
+        "failed",
+    ]
+
+    config_snapshot: str
+
+    current_stage: str
+
+    failure: str | None = None

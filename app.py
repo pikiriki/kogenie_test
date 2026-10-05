@@ -10,6 +10,7 @@ from database import (
     get_brand_profiles,
     get_campaigns,
     get_draft_versions,
+    get_recent_workflow_runs,
     initialize_database,
     save_approved_claim,
     save_brand_profile,
@@ -227,6 +228,50 @@ if smoke_report is not None:
         st.write(
             f"- {failure}"
         )
+
+with st.expander(
+    "Recent workflow runs"
+):
+
+    runs = get_recent_workflow_runs(
+        limit=10
+    )
+
+    if not runs:
+
+        st.write(
+            "No workflow runs recorded yet."
+        )
+
+    for run in runs:
+
+        st.write(
+            f"**{run.workflow_name}**"
+        )
+
+        st.write(
+            f"Run: `{run.run_id}`"
+        )
+
+        st.write(
+            f"Status: {run.status}"
+        )
+
+        st.write(
+            f"Stage: {run.current_stage}"
+        )
+
+        st.write(
+            f"Started: {run.started_at}"
+        )
+
+        if run.failure:
+
+            st.write(
+                f"Failure: {run.failure}"
+            )
+
+        st.divider()
 
 if "current_brief" not in st.session_state:
     st.session_state.current_brief = None

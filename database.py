@@ -14,6 +14,7 @@ from models import (
     CompleteSalesMessage,
     VisualApprovalRecord,
     VisualAsset,
+    WorkflowRun,
 )
 
 from outcome_data import (
@@ -330,6 +331,35 @@ def initialize_database():
 
             FOREIGN KEY (campaign_id)
                 REFERENCES campaigns(id)
+        )
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS workflow_runs (
+            run_id TEXT PRIMARY KEY,
+
+            workflow_name TEXT NOT NULL,
+
+            started_at TEXT NOT NULL,
+
+            completed_at TEXT,
+
+            status TEXT NOT NULL
+                CHECK (
+                    status IN (
+                        'running',
+                        'completed',
+                        'failed'
+                    )
+                ),
+
+            config_snapshot TEXT NOT NULL,
+
+            current_stage TEXT NOT NULL,
+
+            failure TEXT
         )
         """
     )
@@ -1484,3 +1514,288 @@ def get_campaign_outcomes(
         )
 
     return outcomes
+
+
+def create_workflow_run_record(
+    run: WorkflowRun,
+) -> None:
+
+    connection = get_connection()
+
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        INSERT INTO workflow_runs (
+            run_id,
+            workflow_name,
+            started_at,
+            completed_at,
+            status,
+            config_snapshot,
+            current_stage,
+            failure
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            run.run_id,
+            run.workflow_name,
+            run.started_at,
+            run.completed_at,
+            run.status,
+            run.config_snapshot,
+            run.current_stage,
+            run.failure,
+        ),
+    )
+
+    connection.commit()
+    connection.close()
+
+
+def get_workflow_run(
+    run_id: str,
+) -> WorkflowRun | None:
+
+    connection = get_connection()
+
+    row = connection.execute(
+        """
+        SELECT
+            run_id,
+            workflow_name,
+            started_at,
+            completed_at,
+            status,
+            config_snapshot,
+            current_stage,
+            failure
+
+        FROM workflow_runs
+
+        WHERE run_id = ?
+        """,
+        (
+            run_id,
+        ),
+    ).fetchone()
+
+    connection.close()
+
+    if row is None:
+        return None
+
+    return WorkflowRun(
+        run_id=row[0],
+        workflow_name=row[1],
+        started_at=row[2],
+        completed_at=row[3],
+        status=row[4],
+        config_snapshot=row[5],
+        current_stage=row[6],
+        failure=row[7],
+    )
+
+
+def update_workflow_run_stage(
+    run_id: str,
+    stage: str,
+) -> None:
+
+    stage = stage.strip()
+
+
+    if not stage:
+
+        raise ValueError(
+            "Workflow stage cannot be empty."
+        )
+
+    connection = get_connection()
+
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        UPDATE workflow_runs
+
+        SET current_stage = ?
+
+        WHERE run_id = ?
+          AND status = 'running'
+        """,
+        (
+            stage,
+            run_id,
+        ),
+    )
+
+    if cursor.rowcount != 1:
+
+        connection.rollback()
+        connection.close()
+
+        raise ValueError(
+            (
+                "Workflow run does not exist "
+                "or is no longer running."
+            )
+        )
+
+    connection.commit()
+    connection.close()
+
+
+def complete_workflow_run_record(
+    run_id: str,
+    completed_at: str,
+) -> None:
+
+    connection = get_connection()
+
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        UPDATE workflow_runs
+
+        SET
+            status = 'completed',
+            completed_at = ?,
+            current_stage = 'completed',
+            failure = NULL
+
+        WHERE run_id = ?
+          AND status = 'running'
+        """,
+        (
+            completed_at,
+            run_id,
+        ),
+    )
+
+    if cursor.rowcount != 1:
+
+        connection.rollback()
+        connection.close()
+
+        raise ValueError(
+            (
+                "Workflow run does not exist "
+                "or has already reached a "
+                "terminal status."
+            )
+        )
+
+    connection.commit()
+    connection.close()
+
+
+def fail_workflow_run_record(
+    run_id: str,
+    completed_at: str,
+    failure: str,
+) -> None:
+
+    failure = failure.strip()
+
+
+    if not failure:
+
+        failure = (
+            "Workflow failed without "
+            "a supplied failure summary."
+        )
+
+    connection = get_connection()
+
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        UPDATE workflow_runs
+
+        SET
+            status = 'failed',
+            completed_at = ?,
+            failure = ?
+
+        WHERE run_id = ?
+          AND status = 'running'
+        """,
+        (
+            completed_at,
+            failure,
+            run_id,
+        ),
+    )
+
+    if cursor.rowcount != 1:
+
+        connection.rollback()
+        connection.close()
+
+        raise ValueError(
+            (
+                "Workflow run does not exist "
+                "or has already reached a "
+                "terminal status."
+            )
+        )
+
+    connection.commit()
+    connection.close()
+
+
+def get_recent_workflow_runs(
+    limit: int = 20,
+) -> list[WorkflowRun]:
+
+    if limit < 1:
+
+        raise ValueError(
+            "Limit must be at least 1."
+        )
+
+    connection = get_connection()
+
+    rows = connection.execute(
+        """
+        SELECT
+            run_id,
+            workflow_name,
+            started_at,
+            completed_at,
+            status,
+            config_snapshot,
+            current_stage,
+            failure
+
+        FROM workflow_runs
+
+        ORDER BY started_at DESC
+
+        LIMIT ?
+        """,
+        (
+            limit,
+        ),
+    ).fetchall()
+
+    connection.close()
+
+    return [
+        WorkflowRun(
+            run_id=row[0],
+            workflow_name=row[1],
+            started_at=row[2],
+            completed_at=row[3],
+            status=row[4],
+            config_snapshot=row[5],
+            current_stage=row[6],
+            failure=row[7],
+        )
+
+        for row in rows
+    ]
