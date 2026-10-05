@@ -482,3 +482,17 @@ class NoveltyGuidance(BaseModel):
     unexplored_mechanism_emphases: list[str]
     forbidden_shortcuts: list[str]
     strategy_guidance: list[str]
+
+
+class AlternativeStrategy(BaseModel):
+    reader_tension: str
+    mechanism_emphasis: str
+    proposed_big_idea: str
+    proposed_angle: str
+    evidence_used: list[str]
+    evidence_boundary: list[str]
+    historical_difference: str
+
+
+class AlternativeStrategySet(BaseModel):
+    strategies: list[AlternativeStrategy]
