@@ -615,6 +615,9 @@ class GeneratedVisual(BaseModel):
 
     approval_status: str
 
+    source_image_path: str | None = None
+    repair_plan_snapshot: str | None = None
+
 
 class VisualReviewReport(BaseModel):
     objective_alignment: Literal[
@@ -651,3 +654,10 @@ class VisualReviewReport(BaseModel):
     negative_constraint_violations: list[str]
 
     revision_needed: bool
+
+
+class VisualRepairPlan(BaseModel):
+    preserve: list[str]
+    fix: list[str]
+    evidence_constraints: list[str]
+    repair_instruction: str
