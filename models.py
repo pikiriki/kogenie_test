@@ -980,6 +980,19 @@ class CreativeEvidenceLedger(BaseModel):
         "lower",
     ]
 
+    channel: str
+
+    conversion_definition: str
+
+    attribution_context: str
+
+    source_quality: Literal[
+        "verified",
+        "manual",
+        "estimated",
+        "incomplete",
+    ]
+
     observations: list[
         CreativeEvidenceObservation
     ]
@@ -1008,3 +1021,25 @@ class CreativeEvidenceLedger(BaseModel):
     ]
 
     learning_boundary: list[str]
+
+
+class CreativeLearning(BaseModel):
+    creative_key: str
+
+    observation_summary: str
+
+    reusable_learning: str
+
+    contradictions: list[str]
+
+    where_it_may_apply: list[str]
+
+    where_it_may_not_apply: list[str]
+
+    next_test: str
+
+    confidence: Literal[
+        "low",
+        "medium",
+        "high",
+    ]

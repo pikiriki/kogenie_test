@@ -473,6 +473,20 @@ def build_angle_evidence_ledger(
             desired_direction
         ),
 
+        channel=channel,
+
+        conversion_definition=(
+            conversion_definition
+        ),
+
+        attribution_context=(
+            attribution_context
+        ),
+
+        source_quality=(
+            source_quality
+        ),
+
         observations=observations,
 
         supporting_observations=(
