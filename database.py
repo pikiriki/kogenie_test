@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 
 from models import (
     ApprovalRecord,
+    CampaignMemory,
     CompleteSalesMessage,
 )
 
@@ -159,6 +160,33 @@ def initialize_database():
             approved_at TEXT,
 
             created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+            FOREIGN KEY (campaign_id)
+                REFERENCES campaigns(id)
+        )
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS campaign_memories (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            campaign_id INTEGER NOT NULL UNIQUE,
+
+            approved_angle TEXT NOT NULL,
+
+            approved_big_idea TEXT NOT NULL,
+
+            approved_message TEXT NOT NULL,
+
+            evidence_boundaries TEXT NOT NULL,
+
+            outcome_context TEXT NOT NULL,
+
+            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+            updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
             FOREIGN KEY (campaign_id)
                 REFERENCES campaigns(id)
@@ -694,3 +722,122 @@ def get_latest_approved_record(
         ),
         approved_at=row["approved_at"],
     )
+
+
+def save_campaign_memory(
+    memory: CampaignMemory,
+) -> None:
+
+    evidence_json = json.dumps(
+        memory.evidence_boundaries
+    )
+
+    connection = sqlite3.connect(DATABASE_NAME)
+
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        INSERT INTO campaign_memories (
+            campaign_id,
+            approved_angle,
+            approved_big_idea,
+            approved_message,
+            evidence_boundaries,
+            outcome_context
+        )
+        VALUES (?, ?, ?, ?, ?, ?)
+
+        ON CONFLICT(campaign_id)
+        DO UPDATE SET
+
+            approved_angle =
+                excluded.approved_angle,
+
+            approved_big_idea =
+                excluded.approved_big_idea,
+
+            approved_message =
+                excluded.approved_message,
+
+            evidence_boundaries =
+                excluded.evidence_boundaries,
+
+            outcome_context =
+                excluded.outcome_context,
+
+            updated_at =
+                CURRENT_TIMESTAMP
+        """,
+        (
+            memory.campaign_id,
+            memory.approved_angle,
+            memory.approved_big_idea,
+            memory.approved_message,
+            evidence_json,
+            memory.outcome_context,
+        ),
+    )
+
+    connection.commit()
+    connection.close()
+
+
+def get_campaign_memories() -> list[CampaignMemory]:
+
+    connection = sqlite3.connect(DATABASE_NAME)
+
+    connection.row_factory = sqlite3.Row
+
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        SELECT
+            campaign_id,
+            approved_angle,
+            approved_big_idea,
+            approved_message,
+            evidence_boundaries,
+            outcome_context
+
+        FROM campaign_memories
+
+        ORDER BY updated_at DESC
+        """
+    )
+
+    rows = cursor.fetchall()
+
+    connection.close()
+
+    memories = []
+
+    for row in rows:
+
+        evidence_boundaries = json.loads(
+            row["evidence_boundaries"]
+        )
+
+        memory = CampaignMemory(
+            campaign_id=row["campaign_id"],
+            approved_angle=row["approved_angle"],
+            approved_big_idea=(
+                row["approved_big_idea"]
+            ),
+            approved_message=(
+                row["approved_message"]
+            ),
+            evidence_boundaries=(
+                evidence_boundaries
+            ),
+            outcome_context=(
+                row["outcome_context"]
+            ),
+        )
+
+        memories.append(
+            memory
+        )
+
+    return memories
