@@ -554,3 +554,15 @@ class CampaignRefreshResult(BaseModel):
     channel_report: ChannelConsistencyReport | None = None
 
     repaired_channels: list[str] = []
+
+
+class VisualCreativeBrief(BaseModel):
+    visual_job: str
+    subject: str
+    scene: str
+    composition: str
+    text_hierarchy: list[str]
+    product_role: str
+    visual_proof: str
+    avoid: list[str]
+    copy_connection: str
