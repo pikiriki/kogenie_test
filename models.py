@@ -577,3 +577,15 @@ class VisualStyleSpec(BaseModel):
     shape_language: str
     brand_consistency_rules: list[str]
     prohibited_styles: list[str]
+
+
+class VisualGenerationSpec(BaseModel):
+    objective: str
+    canvas: str
+    required_elements: list[str]
+    text_to_render: list[str]
+    composition: str
+    style: str
+    evidence_constraints: list[str]
+    negative_constraints: list[str]
+    generation_instruction: str
