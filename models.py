@@ -863,3 +863,26 @@ class PerformanceContext(BaseModel):
     current_metrics: CampaignMetrics
 
     comparison_boundaries: list[str]
+
+
+class PerformanceComparison(BaseModel):
+    baseline_available: bool
+
+    ctr_absolute_change: float | None
+    ctr_relative_change_pct: float | None
+
+    cpc_absolute_change: float | None
+    cpc_relative_change_pct: float | None
+
+    conversion_rate_absolute_change: float | None
+    conversion_rate_relative_change_pct: float | None
+
+    cpa_absolute_change: float | None
+    cpa_relative_change_pct: float | None
+
+    roas_absolute_change: float | None
+    roas_relative_change_pct: float | None
+
+    available_comparisons: list[str]
+
+    comparison_boundary: list[str]
