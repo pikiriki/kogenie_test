@@ -9,6 +9,14 @@ from models import (
 )
 
 
+from config import (
+    get_config,
+)
+
+
+CONFIG = get_config()
+
+
 novelty_guard_agent = Agent(
     name="Novelty Guard",
 
@@ -125,7 +133,7 @@ If historical outcome data is absent,
 do not infer success or failure.
 """,
 
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
 
     output_type=NoveltyGuidance,
 )

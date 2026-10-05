@@ -6,6 +6,14 @@ from models import (
 )
 
 
+from config import (
+    get_config,
+)
+
+
+CONFIG = get_config()
+
+
 def dedupe_strings(
     items: list[str],
 ) -> list[str]:
@@ -206,7 +214,7 @@ Do not invent:
 Do not write ad copy.
 """,
 
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
 
     output_type=CreativeLearning,
 )

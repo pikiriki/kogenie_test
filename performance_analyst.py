@@ -8,6 +8,14 @@ from models import (
 )
 
 
+from config import (
+    get_config,
+)
+
+
+CONFIG = get_config()
+
+
 performance_analyst_agent = Agent(
     name="Performance Analyst",
 
@@ -142,7 +150,7 @@ actually supports that conclusion.
 Do NOT write advertising copy.
 """,
 
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
 
     output_type=PerformanceAnalysis,
 )

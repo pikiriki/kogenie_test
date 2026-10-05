@@ -10,6 +10,14 @@ from models import (
 )
 
 
+from config import (
+    get_config,
+)
+
+
+CONFIG = get_config()
+
+
 strategy_regeneration_writer = Agent(
     name="Strategy Locked Campaign Writer",
 
@@ -135,7 +143,7 @@ Return one CompleteSalesMessage containing:
 - full_copy
 """,
 
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
 
     output_type=CompleteSalesMessage,
 )

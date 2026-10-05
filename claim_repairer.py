@@ -8,6 +8,14 @@ from models import (
 )
 
 
+from config import (
+    get_config,
+)
+
+
+CONFIG = get_config()
+
+
 ALLOWED_ACTIONS = {
     "keep",
     "qualify",
@@ -73,7 +81,7 @@ The repaired_claim should contain only
 the evidence-supported version.
 """,
 
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
 
     output_type=ClaimRepairResult,
 )

@@ -11,6 +11,14 @@ from models import (
 )
 
 
+from config import (
+    get_config,
+)
+
+
+CONFIG = get_config()
+
+
 visual_novelty_guard = Agent(
     name="Visual Novelty Guard",
 
@@ -132,7 +140,7 @@ Do not infer that an old visual worked merely
 because it was approved.
 """,
 
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
 
     output_type=VisualNoveltyGuidance,
 )

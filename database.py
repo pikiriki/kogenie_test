@@ -3,6 +3,10 @@ import sqlite3
 
 from datetime import datetime, timezone
 
+from config import (
+    get_config,
+)
+
 from models import (
     ApprovalRecord,
     CampaignMemory,
@@ -17,10 +21,16 @@ from outcome_data import (
 )
 
 
-DATABASE_NAME = "copy_studio.db"
+CONFIG = get_config()
+
+
+DATABASE_NAME = str(
+    CONFIG.database_path
+)
 
 
 def get_connection():
+
     connection = sqlite3.connect(
         DATABASE_NAME
     )

@@ -4,12 +4,20 @@ from dotenv import load_dotenv
 from openai import OpenAI
 
 
+from config import (
+    get_config,
+)
+
+
+CONFIG = get_config()
+
+
 load_dotenv()
 
 client = OpenAI()
 
-vector_store_id = os.getenv(
-    "OPENAI_VECTOR_STORE_ID"
+vector_store_id = (
+    CONFIG.vector_store_id
 )
 
 if not vector_store_id:

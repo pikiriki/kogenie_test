@@ -3,6 +3,14 @@ from openai import OpenAI
 from models import CampaignBrief, CopyDraft
 
 
+from config import (
+    get_config,
+)
+
+
+CONFIG = get_config()
+
+
 def generate_copy(brief: CampaignBrief):
     client = OpenAI()
 
@@ -69,7 +77,7 @@ Do not use avoided words.
 """
 
     response = client.responses.parse(
-        model="gpt-6-luna",
+        model=CONFIG.text_model,
         input=[
             {
                 "role": "system",

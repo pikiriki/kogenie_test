@@ -12,6 +12,14 @@ from models import (
 )
 
 
+from config import (
+    get_config,
+)
+
+
+CONFIG = get_config()
+
+
 CHANNEL_REPAIR_RULES = """
 You are repairing ONE failed channel execution
 for KOgenie Copy Studio.
@@ -80,7 +88,7 @@ Keep the Meta feed format:
 - strategy_preserved
 - evidence_check
 """,
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
     output_type=MetaFeedAdDraft,
 )
 
@@ -100,7 +108,7 @@ Keep the Google Search structure:
 
 Preserve relevance to the supplied search intent.
 """,
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
     output_type=SearchAdDraft,
 )
 
@@ -118,7 +126,7 @@ Keep the email structure:
 - strategy_preserved
 - evidence_check
 """,
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
     output_type=EmailDraft,
 )
 
@@ -140,7 +148,7 @@ Preserve the page structure:
 - strategy_preserved
 - evidence_check
 """,
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
     output_type=LandingPageDraft,
 )
 
@@ -159,7 +167,7 @@ Preserve:
 
 Keep one sequential campaign argument.
 """,
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
     output_type=XDraft,
 )
 

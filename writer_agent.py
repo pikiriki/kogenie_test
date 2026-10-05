@@ -20,6 +20,14 @@ from models import (
 )
 
 
+from config import (
+    get_config,
+)
+
+
+CONFIG = get_config()
+
+
 headline_writer_agent = Agent(
     name="Headline Writer Agent",
 
@@ -98,7 +106,7 @@ risk
 Do not write body copy yet.
 """,
 
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
 
     output_type=HeadlineCandidateSet,
 )
@@ -166,7 +174,7 @@ evidence_check
 - explain why the copy remains inside the evidence
 """,
 
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
 
     output_type=OpeningDraft,
 )
@@ -242,7 +250,7 @@ evidence_check
   claims were intentionally avoided
 """,
 
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
 
     output_type=MechanismSectionDraft,
 )
@@ -308,7 +316,7 @@ but do not pretend that required proof already exists.
 Do not write the offer or CTA yet.
 """,
 
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
 
     output_type=ProofSectionDraft,
 )
@@ -382,7 +390,7 @@ OBJECTION COPY:
 - Do not write the final offer or CTA yet.
 """,
 
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
 
     output_type=ObjectionSectionDraft,
 )
@@ -449,7 +457,7 @@ Do not reopen the full argument.
 This is the closing action section.
 """,
 
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
 
     output_type=OfferSectionDraft,
 )
@@ -545,7 +553,7 @@ FULL COPY:
 Return a CompleteSalesMessage.
 """,
 
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
 
     output_type=CompleteSalesMessage,
 )

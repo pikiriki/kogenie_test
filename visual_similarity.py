@@ -20,15 +20,20 @@ from visual_reviewer import (
 )
 
 
+from config import (
+    get_config,
+)
+
+
+CONFIG = get_config()
+
+
 load_dotenv()
 
 
 client = OpenAI()
 
 
-VISUAL_SIMILARITY_MODEL = (
-    "gpt-6-astra"
-)
 
 
 def dedupe_strings(
@@ -237,7 +242,7 @@ Historical visual job:
     )
 
     response = client.responses.create(
-        model=VISUAL_SIMILARITY_MODEL,
+        model=CONFIG.vision_model,
 
         input=[
             {

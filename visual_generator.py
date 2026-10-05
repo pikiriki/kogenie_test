@@ -19,13 +19,20 @@ from models import (
 )
 
 
+from config import (
+    get_config,
+)
+
+
+CONFIG = get_config()
+
+
 load_dotenv()
 
 
 client = OpenAI()
 
 
-IMAGE_MODEL = "gpt-image-2.5-flare"
 
 
 def validate_image_size(
@@ -95,7 +102,7 @@ def generate_visual(
     campaign_id: int,
     channel: str,
     generation_spec: VisualGenerationSpec,
-    output_directory: str = "generated_visuals",
+    output_directory: str | None = None,
 ) -> GeneratedVisual:
 
     validate_image_size(
@@ -103,9 +110,17 @@ def generate_visual(
         generation_spec.height,
     )
 
-    output_dir = Path(
-        output_directory
-    )
+    if output_directory is None:
+
+        output_dir = (
+            CONFIG.generated_visuals_path
+        )
+
+    else:
+
+        output_dir = Path(
+            output_directory
+        )
 
     output_dir.mkdir(
         parents=True,
@@ -119,7 +134,7 @@ def generate_visual(
     )
 
     response = client.images.generate(
-        model=IMAGE_MODEL,
+        model=CONFIG.image_model,
         prompt=(
             generation_spec
             .generation_instruction
@@ -194,7 +209,7 @@ def generate_visual(
 
         channel=channel,
 
-        model=IMAGE_MODEL,
+        model=CONFIG.image_model,
 
         created_at=created_at,
 

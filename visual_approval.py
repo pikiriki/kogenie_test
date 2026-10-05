@@ -21,6 +21,14 @@ from models import (
 )
 
 
+from config import (
+    get_config,
+)
+
+
+CONFIG = get_config()
+
+
 def sha256_file(
     file_path: str,
 ) -> str:
@@ -131,7 +139,7 @@ def create_visual_approval_request(
 
 def create_approved_visual_snapshot(
     approval_record: VisualApprovalRecord,
-    output_directory: str = "approved_visuals",
+    output_directory: str | None = None,
 ) -> tuple[str, str]:
 
     source = Path(
@@ -164,9 +172,17 @@ def create_approved_visual_snapshot(
             )
         )
 
-    output_dir = Path(
-        output_directory
-    )
+    if output_directory is None:
+
+        output_dir = (
+            CONFIG.approved_visuals_path
+        )
+
+    else:
+
+        output_dir = Path(
+            output_directory
+        )
 
     output_dir.mkdir(
         parents=True,

@@ -1,8 +1,10 @@
 import os
 
-from pathlib import Path
-
 from dotenv import load_dotenv
+
+from config import (
+    get_config,
+)
 
 from database import (
     get_connection,
@@ -17,9 +19,11 @@ from models import (
 load_dotenv()
 
 
+CONFIG = get_config()
+
+
 REQUIRED_ENVIRONMENT_VARIABLES = [
     "OPENAI_API_KEY",
-    "OPENAI_VECTOR_STORE_ID",
 ]
 
 
@@ -37,16 +41,9 @@ REQUIRED_DATABASE_TABLES = {
 
 
 RUNTIME_DIRECTORIES = [
-    Path("generated_visuals"),
-    Path("approved_visuals"),
+    CONFIG.generated_visuals_path,
+    CONFIG.approved_visuals_path,
 ]
-
-
-TEXT_MODEL = "gpt-6-luna"
-
-VISION_MODEL = "gpt-6-astra"
-
-IMAGE_MODEL = "gpt-image-2.5-flare"
 
 
 def check_environment() -> tuple[
@@ -73,6 +70,15 @@ def check_environment() -> tuple[
                     + variable_name
                 )
             )
+
+    if not CONFIG.vector_store_id:
+
+        problems.append(
+            (
+                "Missing configuration: "
+                "OPENAI_VECTOR_STORE_ID"
+            )
+        )
 
     return (
         len(problems) == 0,
@@ -212,9 +218,9 @@ def check_model_configuration() -> tuple[
     problems = []
 
     configured_models = {
-        "text": TEXT_MODEL,
-        "vision": VISION_MODEL,
-        "image": IMAGE_MODEL,
+        "text": CONFIG.text_model,
+        "vision": CONFIG.vision_model,
+        "image": CONFIG.image_model,
     }
 
     for role, model_name in (

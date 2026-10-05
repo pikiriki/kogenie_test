@@ -7,6 +7,14 @@ from models import (
 )
 
 
+from config import (
+    get_config,
+)
+
+
+CONFIG = get_config()
+
+
 brand_voice_reviewer_agent = Agent(
     name="Brand Voice Reviewer",
 
@@ -121,7 +129,7 @@ The copy can use customer language for recognition
 while still expressing it in the brand's established style.
 """,
 
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
 
     output_type=BrandVoiceReview,
 )

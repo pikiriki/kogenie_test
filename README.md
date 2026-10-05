@@ -265,6 +265,32 @@ Core rules:
 8. A test plan is not evidence that the treatment works.
 9. Statistical thresholds must not be invented when no statistical design exists.
 
+## Centralized configuration
+
+KOgenie loads runtime configuration through `config.py`.
+
+`AppConfig` is the single source of truth for:
+
+- text model
+- vision model
+- image model
+- vector store ID
+- SQLite database path
+- generated visual directory
+- approved visual directory
+
+Safe defaults live in `config.py`.
+
+Environment-specific overrides live in `.env`.
+
+Secrets such as `OPENAI_API_KEY` stay in the environment
+and are never committed.
+
+Use `.env.example` as the setup template.
+
+Configuration is loaded once per process and treated
+as immutable.
+
 ## Current limitation
 
 The system still relies on humans to enter research, claims, evidence,

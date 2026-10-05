@@ -6,6 +6,14 @@ from models import (
 )
 
 
+from config import (
+    get_config,
+)
+
+
+CONFIG = get_config()
+
+
 campaign_consistency_reviewer = Agent(
     name="Cross-Channel Consistency Reviewer",
 
@@ -132,7 +140,7 @@ something meaningful to fix.
 Do not invent problems merely to fill the report.
 """,
 
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
 
     output_type=ChannelConsistencyReport,
 )

@@ -8,6 +8,14 @@ from models import (
 )
 
 
+from config import (
+    get_config,
+)
+
+
+CONFIG = get_config()
+
+
 ALLOWED_SECTIONS = [
     "headline",
     "opening",
@@ -116,7 +124,7 @@ The application will independently enforce preservation
 of unapproved sections after your response.
 """,
 
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
 
     output_type=CompleteSalesMessage,
 )

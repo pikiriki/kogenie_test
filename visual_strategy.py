@@ -9,6 +9,14 @@ from models import (
 )
 
 
+from config import (
+    get_config,
+)
+
+
+CONFIG = get_config()
+
+
 visual_strategy_agent = Agent(
     name="Visual Creative Strategist",
 
@@ -130,7 +138,7 @@ Do not change the selected angle.
 Do not generate final image-generation prompts yet.
 """,
 
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
 
     output_type=VisualCreativeBrief,
 )

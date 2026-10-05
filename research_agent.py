@@ -21,10 +21,18 @@ from models import (
 )
 
 
+from config import (
+    get_config,
+)
+
+
+CONFIG = get_config()
+
+
 load_dotenv()
 
-VECTOR_STORE_ID = os.getenv(
-    "OPENAI_VECTOR_STORE_ID"
+VECTOR_STORE_ID = (
+    CONFIG.vector_store_id
 )
 
 if not VECTOR_STORE_ID:
@@ -81,7 +89,7 @@ RESEARCH RULES:
         ),
     ],
 
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
 
     model_settings=ModelSettings(
         tool_choice="auto"
@@ -140,7 +148,7 @@ Rules:
         )
     ],
 
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
 
     model_settings=ModelSettings(
         tool_choice="required"
@@ -271,7 +279,7 @@ Research rules:
         ),
     ],
 
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
 
     model_settings=ModelSettings(
         tool_choice="required"
@@ -361,7 +369,7 @@ Do NOT decide:
 Those belong to a later strategy stage.
 """,
 
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
 
     output_type=ResearchDocument,
 )

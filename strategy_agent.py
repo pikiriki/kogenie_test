@@ -16,6 +16,14 @@ from models import (
 )
 
 
+from config import (
+    get_config,
+)
+
+
+CONFIG = get_config()
+
+
 reader_strategy_agent = Agent(
     name="Reader Strategy Agent",
 
@@ -47,7 +55,7 @@ Rules:
 - Do not write advertising copy.
 """,
 
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
 
     output_type=ReaderProfile,
 )
@@ -110,7 +118,7 @@ Do not:
 - write advertising copy
 """,
 
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
 
     output_type=DesireHypothesis,
 )
@@ -177,7 +185,7 @@ Do not:
 - write advertising copy
 """,
 
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
 
     output_type=DesireIntensity,
 )
@@ -251,7 +259,7 @@ Do not:
 - write the advertisement
 """,
 
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
 
     output_type=AwarenessHypothesis,
 )
@@ -312,7 +320,7 @@ Rules:
 - List what should not lead the message.
 """,
 
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
 
     output_type=MessageEntryPoint,
 )
@@ -381,7 +389,7 @@ Do not:
 - claim that competitor marketing statements are proven facts
 """,
 
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
 
     output_type=SophisticationHypothesis,
 )
@@ -453,7 +461,7 @@ Do not:
 - invent proprietary technology
 """,
 
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
 
     output_type=MechanismHypothesis,
 )
@@ -528,7 +536,7 @@ Do not:
 - invent performance claims
 """,
 
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
 
     output_type=ObjectionMap,
 )
@@ -600,7 +608,7 @@ Do not write advertising copy.
 Do not make the offer sound more generous than it is.
 """,
 
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
 
     output_type=OfferStrategy,
 )
@@ -662,7 +670,7 @@ Do not:
 - invent urgency
 """,
 
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
 
     output_type=BigIdeaHypothesis,
 )
@@ -739,7 +747,7 @@ Do not:
 - invent offer terms
 """,
 
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
 
     output_type=CreativeAngleSet,
 )

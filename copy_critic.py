@@ -7,6 +7,14 @@ from models import (
 )
 
 
+from config import (
+    get_config,
+)
+
+
+CONFIG = get_config()
+
+
 copy_critic_agent = Agent(
     name="Copy Critic",
 
@@ -147,7 +155,7 @@ If a category has no meaningful problems,
 return an empty list.
 """,
 
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
 
     output_type=CopyCritique,
 )

@@ -13,6 +13,14 @@ from models import (
 )
 
 
+from config import (
+    get_config,
+)
+
+
+CONFIG = get_config()
+
+
 meta_feed_writer_agent = Agent(
     name="Meta Feed Writer Agent",
 
@@ -75,7 +83,7 @@ into a claim.
 The task is COMPRESSION, not invention.
 """,
 
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
 
     output_type=MetaFeedAdDraft,
 )
@@ -155,7 +163,7 @@ The task is to adapt the existing campaign
 to expressed search intent without changing its facts.
 """,
 
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
 
     output_type=SearchAdDraft,
 )
@@ -241,7 +249,7 @@ The task is adaptation and compression,
 not invention.
 """,
 
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
 
     output_type=EmailDraft,
 )
@@ -313,7 +321,7 @@ The task is structural adaptation,
 not invention.
 """,
 
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
 
     output_type=LandingPageDraft,
 )
@@ -400,7 +408,7 @@ The task is sequential adaptation,
 not invention.
 """,
 
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
 
     output_type=XDraft,
 )
@@ -507,7 +515,7 @@ Do not create three different campaigns.
 Create three executions of ONE campaign.
 """,
 
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
 
     output_type=ChannelVariantSet,
 )

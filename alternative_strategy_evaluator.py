@@ -11,6 +11,14 @@ from models import (
 )
 
 
+from config import (
+    get_config,
+)
+
+
+CONFIG = get_config()
+
+
 EVALUATION_LEVELS = {
     "strong",
     "mixed",
@@ -174,7 +182,7 @@ Outcome context may only be interpreted literally.
 Do not rank the candidate against the other alternatives.
 """
     ,
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
     output_type=AlternativeStrategyEvaluation,
 )
 

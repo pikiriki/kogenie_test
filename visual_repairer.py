@@ -17,10 +17,17 @@ from models import (
 )
 
 from visual_generator import (
-    IMAGE_MODEL,
     make_artifact_stem,
     validate_image_size,
 )
+
+
+from config import (
+    get_config,
+)
+
+
+CONFIG = get_config()
 
 
 client = OpenAI()
@@ -282,7 +289,7 @@ def repair_visual_once(
     generated_visual: GeneratedVisual,
     generation_spec: VisualGenerationSpec,
     repair_plan: VisualRepairPlan,
-    output_directory: str = "generated_visuals",
+    output_directory: str | None = None,
 ) -> GeneratedVisual:
 
     if not repair_plan.fix:
@@ -338,9 +345,17 @@ def repair_visual_once(
             "than 50 MB."
         )
 
-    output_dir = Path(
-        output_directory
-    )
+    if output_directory is None:
+
+        output_dir = (
+            CONFIG.generated_visuals_path
+        )
+
+    else:
+
+        output_dir = Path(
+            output_directory
+        )
 
 
     output_dir.mkdir(
@@ -365,7 +380,7 @@ def repair_visual_once(
     with source_path.open("rb") as source_file:
 
         response = client.images.edit(
-            model=IMAGE_MODEL,
+            model=CONFIG.image_model,
             image=source_file,
             prompt=(
                 repair_plan.repair_instruction
@@ -439,7 +454,7 @@ def repair_visual_once(
             generated_visual.channel
         ),
 
-        model=IMAGE_MODEL,
+        model=CONFIG.image_model,
 
         created_at=created_at,
 

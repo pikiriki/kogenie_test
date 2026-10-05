@@ -8,6 +8,14 @@ from models import (
 )
 
 
+from config import (
+    get_config,
+)
+
+
+CONFIG = get_config()
+
+
 claim_reviewer_agent = Agent(
     name="Claim Evidence Reviewer",
 
@@ -147,7 +155,7 @@ If the copy contains no meaningful factual claims,
 return an empty claims list.
 """,
 
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
 
     output_type=ClaimEvidenceReport,
 )

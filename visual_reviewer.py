@@ -15,13 +15,20 @@ from models import (
 )
 
 
+from config import (
+    get_config,
+)
+
+
+CONFIG = get_config()
+
+
 load_dotenv()
 
 
 client = OpenAI()
 
 
-VISUAL_REVIEW_MODEL = "gpt-6-astra"
 
 
 def image_to_data_url(
@@ -219,7 +226,7 @@ GENERATED VISUAL METADATA
 """
 
     response = client.responses.parse(
-        model=VISUAL_REVIEW_MODEL,
+        model=CONFIG.vision_model,
         input=[
             {
                 "role": "system",

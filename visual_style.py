@@ -7,6 +7,14 @@ from models import (
 )
 
 
+from config import (
+    get_config,
+)
+
+
+CONFIG = get_config()
+
+
 visual_style_agent = Agent(
     name="Visual Style Strategist",
 
@@ -125,7 +133,7 @@ Do not create:
 Do not create the final image prompt yet.
 """,
 
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
 
     output_type=VisualStyleSpec,
 )

@@ -10,6 +10,14 @@ from models import (
 )
 
 
+from config import (
+    get_config,
+)
+
+
+CONFIG = get_config()
+
+
 alternative_strategy_agent = Agent(
     name="Alternative Strategy Generator",
 
@@ -104,7 +112,7 @@ Do not write:
 Return exactly 3 AlternativeStrategy objects.
 """,
 
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
 
     output_type=AlternativeStrategySet,
 )

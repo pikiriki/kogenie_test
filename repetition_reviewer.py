@@ -7,6 +7,14 @@ from models import (
 )
 
 
+from config import (
+    get_config,
+)
+
+
+CONFIG = get_config()
+
+
 strategic_repetition_reviewer = Agent(
     name="Strategic Repetition Reviewer",
 
@@ -115,7 +123,7 @@ Do not rewrite the proposed strategy.
 This is a reviewer only.
 """,
 
-    model="gpt-6-luna",
+    model=CONFIG.text_model,
 
     output_type=RepetitionReport,
 )
