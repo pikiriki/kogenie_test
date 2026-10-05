@@ -43,11 +43,17 @@ def build_copy_strategy_card(
     return CopyStrategyCard(
         reader=reader_profile.who_they_are,
         primary_problem=reader_profile.primary_problem,
+        active_reader_tension=(
+            reader_profile.primary_problem
+        ),
         deeper_desire=desire_hypothesis.deeper_desire,
         awareness=awareness_hypothesis.level,
         sophistication=sophistication_hypothesis.stage,
         message_entry=message_entry_point.starting_point,
         mechanism=mechanism_hypothesis.causal_explanation,
+        mechanism_emphasis=(
+            mechanism_hypothesis.causal_explanation
+        ),
         big_idea=big_idea.central_thought,
         selected_angle=selected_angle_summary,
         major_objections=major_objections,

@@ -233,16 +233,26 @@ class CompleteSalesMessage(BaseModel):
 class CopyStrategyCard(BaseModel):
     reader: str
     primary_problem: str
+
+    active_reader_tension: str = ""
+
     deeper_desire: str
     awareness: str
     sophistication: str
     message_entry: str
+
     mechanism: str
+
+    mechanism_emphasis: str = ""
+
     big_idea: str
     selected_angle: str
+
     major_objections: list[str]
+
     proof_boundary: list[str]
     offer_boundary: list[str]
+
     final_message: str
 
 
@@ -519,3 +529,11 @@ class StrategySelection(BaseModel):
     selection_status: str
     human_reason: str
     selected_at: str | None
+
+
+class StrategyApplicationResult(BaseModel):
+    updated_strategy_card: CopyStrategyCard
+    selected_strategy_index: int
+    applied_changes: list[str]
+    preserved_constraints: list[str]
+    human_reason: str
