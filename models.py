@@ -511,3 +511,11 @@ class AlternativeStrategyEvaluation(BaseModel):
 
 class AlternativeStrategyEvaluationSet(BaseModel):
     evaluations: list[AlternativeStrategyEvaluation]
+
+
+class StrategySelection(BaseModel):
+    candidate_index: int | None
+    evaluation_summary: str
+    selection_status: str
+    human_reason: str
+    selected_at: str | None
