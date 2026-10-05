@@ -819,3 +819,24 @@ class CampaignMetrics(BaseModel):
     cpa: float | None
 
     roas: float | None
+
+
+class OutcomeEvidenceSnapshot(BaseModel):
+    raw_outcome: CampaignOutcome
+
+    derived_metrics: CampaignMetrics
+
+    conversion_definition: str
+
+    attribution_context: str
+
+    source_quality: Literal[
+        "verified",
+        "manual",
+        "estimated",
+        "incomplete",
+    ]
+
+    known_gaps: list[str]
+
+    interpretation_boundary: list[str]
