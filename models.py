@@ -886,3 +886,21 @@ class PerformanceComparison(BaseModel):
     available_comparisons: list[str]
 
     comparison_boundary: list[str]
+
+
+class PerformanceAnalysis(BaseModel):
+    observed_changes: list[str]
+
+    supported_interpretations: list[str]
+
+    unsupported_explanations: list[str]
+
+    hypotheses: list[str]
+
+    additional_evidence_needed: list[str]
+
+    confidence: Literal[
+        "low",
+        "medium",
+        "high",
+    ]
