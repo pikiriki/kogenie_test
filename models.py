@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class BrandProfile(BaseModel):
@@ -714,3 +714,47 @@ class VisualAsset(BaseModel):
         "in_use",
         "retired",
     ]
+
+
+class VisualSimilarityMatch(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid"
+    )
+
+    asset_id: int
+
+    overlap_level: Literal[
+        "low",
+        "medium",
+        "high",
+    ]
+
+    same_visual_territory: bool
+
+    similarity_reason: str
+
+    shared_visual_patterns: list[str]
+
+    meaningful_differences: list[str]
+
+    novelty_gaps: list[str]
+
+
+class VisualSimilarityReport(BaseModel):
+    history_available: bool
+
+    exact_duplicate_asset_ids: list[int]
+
+    similar_assets: list[
+        VisualSimilarityMatch
+    ]
+
+    repeated_visual_patterns: list[str]
+
+    meaningful_differences: list[str]
+
+    novelty_gaps: list[str]
+
+    revision_needed: bool
+
+    history_note: str
