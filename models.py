@@ -688,3 +688,29 @@ class VisualApprovalRecord(BaseModel):
 
     created_at: str | None = None
     decided_at: str | None = None
+
+
+class VisualAsset(BaseModel):
+    id: int | None = None
+
+    campaign_id: int
+
+    visual_path: str
+    approved_snapshot_path: str
+
+    sha256: str
+
+    channel: str
+
+    strategy_angle: str
+    visual_job: str
+
+    created_at: str
+
+    approval_record_id: int
+
+    usage_status: Literal[
+        "available",
+        "in_use",
+        "retired",
+    ]

@@ -8,6 +8,7 @@ from models import (
     CampaignMemory,
     CompleteSalesMessage,
     VisualApprovalRecord,
+    VisualAsset,
 )
 
 
@@ -223,6 +224,45 @@ def initialize_database():
 
             FOREIGN KEY (campaign_id)
                 REFERENCES campaigns(id)
+        )
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS visual_assets (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            campaign_id INTEGER NOT NULL,
+
+            visual_path TEXT NOT NULL,
+            approved_snapshot_path TEXT NOT NULL,
+
+            sha256 TEXT NOT NULL,
+
+            channel TEXT NOT NULL,
+
+            strategy_angle TEXT NOT NULL,
+            visual_job TEXT NOT NULL,
+
+            created_at TEXT NOT NULL,
+
+            approval_record_id INTEGER NOT NULL UNIQUE,
+
+            usage_status TEXT NOT NULL
+                CHECK (
+                    usage_status IN (
+                        'available',
+                        'in_use',
+                        'retired'
+                    )
+                ),
+
+            FOREIGN KEY (campaign_id)
+                REFERENCES campaigns(id),
+
+            FOREIGN KEY (approval_record_id)
+                REFERENCES visual_approval_records(id)
         )
         """
     )
@@ -1054,3 +1094,180 @@ def finalize_visual_approval_record(
 
     connection.commit()
     connection.close()
+
+
+def save_visual_asset(
+    asset: VisualAsset,
+) -> int:
+
+    connection = sqlite3.connect(DATABASE_NAME)
+    cursor = connection.cursor()
+
+    existing = cursor.execute(
+        """
+        SELECT
+            id,
+            approved_snapshot_path,
+            sha256
+
+        FROM visual_assets
+
+        WHERE approval_record_id = ?
+        """,
+        (
+            asset.approval_record_id,
+        ),
+    ).fetchone()
+
+    if existing is not None:
+
+        existing_id = existing[0]
+        existing_path = existing[1]
+        existing_sha256 = existing[2]
+
+        if (
+            existing_path
+            != asset.approved_snapshot_path
+            or existing_sha256
+            != asset.sha256
+        ):
+
+            connection.close()
+
+            raise RuntimeError(
+                (
+                    "Existing visual asset for this "
+                    "approval does not match the "
+                    "current approved snapshot."
+                )
+            )
+
+        connection.close()
+
+        return existing_id
+
+    cursor.execute(
+        """
+        INSERT INTO visual_assets (
+            campaign_id,
+            visual_path,
+            approved_snapshot_path,
+            sha256,
+            channel,
+            strategy_angle,
+            visual_job,
+            created_at,
+            approval_record_id,
+            usage_status
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            asset.campaign_id,
+            asset.visual_path,
+            asset.approved_snapshot_path,
+            asset.sha256,
+            asset.channel,
+            asset.strategy_angle,
+            asset.visual_job,
+            asset.created_at,
+            asset.approval_record_id,
+            asset.usage_status,
+        ),
+    )
+
+    asset_id = cursor.lastrowid
+
+    connection.commit()
+    connection.close()
+
+    return asset_id
+
+
+def get_visual_assets(
+    campaign_id: int | None = None,
+) -> list[VisualAsset]:
+
+    connection = sqlite3.connect(DATABASE_NAME)
+    cursor = connection.cursor()
+
+    if campaign_id is None:
+
+        rows = cursor.execute(
+            """
+            SELECT
+                id,
+                campaign_id,
+                visual_path,
+                approved_snapshot_path,
+                sha256,
+                channel,
+                strategy_angle,
+                visual_job,
+                created_at,
+                approval_record_id,
+                usage_status
+
+            FROM visual_assets
+
+            ORDER BY
+                created_at DESC,
+                id DESC
+            """
+        ).fetchall()
+
+    else:
+
+        rows = cursor.execute(
+            """
+            SELECT
+                id,
+                campaign_id,
+                visual_path,
+                approved_snapshot_path,
+                sha256,
+                channel,
+                strategy_angle,
+                visual_job,
+                created_at,
+                approval_record_id,
+                usage_status
+
+            FROM visual_assets
+
+            WHERE campaign_id = ?
+
+            ORDER BY
+                created_at DESC,
+                id DESC
+            """,
+            (
+                campaign_id,
+            ),
+        ).fetchall()
+
+    connection.close()
+
+    assets = []
+
+    for row in rows:
+
+        asset = VisualAsset(
+            id=row[0],
+            campaign_id=row[1],
+            visual_path=row[2],
+            approved_snapshot_path=row[3],
+            sha256=row[4],
+            channel=row[5],
+            strategy_angle=row[6],
+            visual_job=row[7],
+            created_at=row[8],
+            approval_record_id=row[9],
+            usage_status=row[10],
+        )
+
+        assets.append(
+            asset
+        )
+
+    return assets
