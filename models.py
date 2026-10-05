@@ -456,3 +456,20 @@ class CampaignMemory(BaseModel):
     approved_message: str
     evidence_boundaries: list[str]
     outcome_context: str
+
+
+class SimilarCampaignMatch(BaseModel):
+    campaign_id: int
+    overlap_level: str
+    similarity_reason: str
+    shared_elements: list[str]
+    meaningful_differences: list[str]
+
+
+class RepetitionReport(BaseModel):
+    proposed_big_idea: str
+    proposed_angle: str
+    similar_campaigns: list[SimilarCampaignMatch]
+    repeated_patterns: list[str]
+    novelty_gaps: list[str]
+    revision_needed: bool
