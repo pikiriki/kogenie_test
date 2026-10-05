@@ -566,3 +566,14 @@ class VisualCreativeBrief(BaseModel):
     visual_proof: str
     avoid: list[str]
     copy_connection: str
+
+
+class VisualStyleSpec(BaseModel):
+    aesthetic_direction: str
+    palette_direction: str
+    typography_direction: str
+    imagery_style: str
+    spacing_density: str
+    shape_language: str
+    brand_consistency_rules: list[str]
+    prohibited_styles: list[str]
