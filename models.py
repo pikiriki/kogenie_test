@@ -661,3 +661,30 @@ class VisualRepairPlan(BaseModel):
     fix: list[str]
     evidence_constraints: list[str]
     repair_instruction: str
+
+
+class VisualApprovalRecord(BaseModel):
+    id: int | None = None
+
+    campaign_id: int
+
+    visual_path: str
+    visual_sha256: str
+
+    generation_spec_snapshot: str
+    visual_review_snapshot: str
+
+    status: Literal[
+        "awaiting human approval",
+        "approved",
+        "rejected",
+    ]
+
+    reviewer: str | None = None
+    note: str = ""
+
+    approved_visual_snapshot_path: str | None = None
+    approved_visual_sha256: str | None = None
+
+    created_at: str | None = None
+    decided_at: str | None = None

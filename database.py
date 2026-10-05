@@ -7,6 +7,7 @@ from models import (
     ApprovalRecord,
     CampaignMemory,
     CompleteSalesMessage,
+    VisualApprovalRecord,
 )
 
 
@@ -187,6 +188,38 @@ def initialize_database():
             created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
             updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+            FOREIGN KEY (campaign_id)
+                REFERENCES campaigns(id)
+        )
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS visual_approval_records (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            campaign_id INTEGER NOT NULL,
+
+            visual_path TEXT NOT NULL,
+            visual_sha256 TEXT NOT NULL,
+
+            generation_spec_snapshot TEXT NOT NULL,
+            visual_review_snapshot TEXT NOT NULL,
+
+            status TEXT NOT NULL,
+
+            reviewer TEXT,
+            note TEXT NOT NULL DEFAULT '',
+
+            approved_visual_snapshot_path TEXT,
+            approved_visual_sha256 TEXT,
+
+            created_at TEXT NOT NULL
+                DEFAULT CURRENT_TIMESTAMP,
+
+            decided_at TEXT,
 
             FOREIGN KEY (campaign_id)
                 REFERENCES campaigns(id)
@@ -841,3 +874,183 @@ def get_campaign_memories() -> list[CampaignMemory]:
         )
 
     return memories
+
+
+def create_visual_approval_record(
+    campaign_id: int,
+    visual_path: str,
+    visual_sha256: str,
+    generation_spec_snapshot: str,
+    visual_review_snapshot: str,
+) -> int:
+
+    connection = sqlite3.connect(DATABASE_NAME)
+
+    cursor = connection.cursor()
+
+    existing = cursor.execute(
+        """
+        SELECT id, status
+        FROM visual_approval_records
+        WHERE visual_path = ?
+          AND visual_sha256 = ?
+        ORDER BY id DESC
+        LIMIT 1
+        """,
+        (
+            visual_path,
+            visual_sha256,
+        ),
+    ).fetchone()
+
+    if existing is not None:
+
+        connection.close()
+
+        raise ValueError(
+            (
+                "This exact visual already has "
+                "an approval record. "
+                f"Record {existing[0]} has status "
+                f"'{existing[1]}'."
+            )
+        )
+
+    cursor.execute(
+        """
+        INSERT INTO visual_approval_records (
+            campaign_id,
+            visual_path,
+            visual_sha256,
+            generation_spec_snapshot,
+            visual_review_snapshot,
+            status
+        )
+        VALUES (?, ?, ?, ?, ?, ?)
+        """,
+        (
+            campaign_id,
+            visual_path,
+            visual_sha256,
+            generation_spec_snapshot,
+            visual_review_snapshot,
+            "awaiting human approval",
+        ),
+    )
+
+    approval_id = cursor.lastrowid
+
+    connection.commit()
+    connection.close()
+
+    return approval_id
+
+
+def get_visual_approval_record(
+    approval_id: int,
+) -> VisualApprovalRecord | None:
+
+    connection = sqlite3.connect(DATABASE_NAME)
+
+    cursor = connection.cursor()
+
+    row = cursor.execute(
+        """
+        SELECT
+            id,
+            campaign_id,
+            visual_path,
+            visual_sha256,
+            generation_spec_snapshot,
+            visual_review_snapshot,
+            status,
+            reviewer,
+            note,
+            approved_visual_snapshot_path,
+            approved_visual_sha256,
+            created_at,
+            decided_at
+
+        FROM visual_approval_records
+
+        WHERE id = ?
+        """,
+        (approval_id,),
+    ).fetchone()
+
+    connection.close()
+
+    if row is None:
+        return None
+
+    return VisualApprovalRecord(
+        id=row[0],
+        campaign_id=row[1],
+        visual_path=row[2],
+        visual_sha256=row[3],
+        generation_spec_snapshot=row[4],
+        visual_review_snapshot=row[5],
+        status=row[6],
+        reviewer=row[7],
+        note=row[8],
+        approved_visual_snapshot_path=row[9],
+        approved_visual_sha256=row[10],
+        created_at=row[11],
+        decided_at=row[12],
+    )
+
+
+def finalize_visual_approval_record(
+    approval_id: int,
+    decision: str,
+    reviewer: str,
+    note: str,
+    decided_at: str,
+    approved_visual_snapshot_path: str | None,
+    approved_visual_sha256: str | None,
+) -> None:
+
+    connection = sqlite3.connect(DATABASE_NAME)
+
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        UPDATE visual_approval_records
+
+        SET
+            status = ?,
+            reviewer = ?,
+            note = ?,
+            approved_visual_snapshot_path = ?,
+            approved_visual_sha256 = ?,
+            decided_at = ?
+
+        WHERE id = ?
+          AND status = 'awaiting human approval'
+        """,
+        (
+            decision,
+            reviewer,
+            note,
+            approved_visual_snapshot_path,
+            approved_visual_sha256,
+            decided_at,
+            approval_id,
+        ),
+    )
+
+    if cursor.rowcount != 1:
+
+        connection.rollback()
+        connection.close()
+
+        raise ValueError(
+            (
+                "Visual approval record does not exist "
+                "or has already been decided."
+            )
+        )
+
+    connection.commit()
+    connection.close()
