@@ -537,3 +537,20 @@ class StrategyApplicationResult(BaseModel):
     applied_changes: list[str]
     preserved_constraints: list[str]
     human_reason: str
+
+
+class StrategyRegenerationResult(BaseModel):
+    updated_strategy_card: CopyStrategyCard
+    complete_message: CompleteSalesMessage
+    invalidated_artifacts: list[str]
+    regeneration_reason: str
+
+
+class CampaignRefreshResult(BaseModel):
+    status: str
+
+    campaign_pack: CampaignPack | None = None
+
+    channel_report: ChannelConsistencyReport | None = None
+
+    repaired_channels: list[str] = []

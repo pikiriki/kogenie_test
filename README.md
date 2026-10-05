@@ -4,7 +4,7 @@ A simple browser interface for building an AI-assisted copywriting workflow.
 
 ## Current version
 
-Version 8 — Review, Revision, and Human Approval
+Version 9 — Campaign Memory and Strategic Novelty
 
 ## What the app currently does
 
@@ -141,6 +141,39 @@ Human approval applies to a specific stored copy snapshot.
 If the copy changes, a new approval request is required.
 
 Automated review passing does not automatically publish or approve copy.
+
+## Version 9 — Campaign Memory and Strategic Novelty
+
+Version 9 adds approved campaign memory and uses historical
+campaign context to detect strategic repetition without
+blindly copying past campaigns.
+
+The system now supports:
+
+- approved campaign memory
+- persistent campaign memory storage
+- semantic strategic repetition review
+- evidence-grounded novelty guidance
+- alternative strategy generation
+- independent alternative-strategy evaluation
+- explicit human strategy selection
+- controlled application of the selected strategy
+- downstream copy invalidation after strategy changes
+- strategy-locked core copy regeneration
+- regenerated multi-channel campaigns
+- cross-channel consistency review and targeted repair
+- fresh human approval after strategy change
+- campaign-memory update only after approval
+
+Core memory principle:
+
+Past campaigns are historical context, not future commands.
+
+Approved does not mean successful.
+
+A new strategy must still pass evidence review,
+copy review, brand review, channel review,
+and fresh human approval before it becomes trusted memory.
 
 ## Current limitation
 
