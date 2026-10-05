@@ -20,6 +20,18 @@ from outcome_data import (
 DATABASE_NAME = "copy_studio.db"
 
 
+def get_connection():
+    connection = sqlite3.connect(
+        DATABASE_NAME
+    )
+
+    connection.execute(
+        "PRAGMA foreign_keys = ON"
+    )
+
+    return connection
+
+
 def initialize_database():
     connection = sqlite3.connect(DATABASE_NAME)
 

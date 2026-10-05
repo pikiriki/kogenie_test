@@ -1071,3 +1071,17 @@ class NextTestPlan(BaseModel):
     decision_rule: str
 
     causal_boundary: list[str]
+
+
+class RuntimeHealth(BaseModel):
+    environment_ok: bool
+
+    database_ok: bool
+
+    storage_ok: bool
+
+    model_configuration_ok: bool
+
+    missing_requirements: list[str]
+
+    ready: bool

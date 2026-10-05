@@ -18,9 +18,43 @@ from database import (
 )
 
 from models import BrandProfile, CampaignBrief, CopyDraft
+from runtime_health import (
+    check_runtime_health,
+)
 
 load_dotenv()
 initialize_database()
+
+runtime_health = (
+    check_runtime_health()
+)
+
+if not runtime_health.ready:
+
+    st.error(
+        "KOgenie cannot start safely."
+    )
+
+    st.write(
+        "The following runtime "
+        "requirements need attention:"
+    )
+
+
+    for issue in (
+        runtime_health
+        .missing_requirements
+    ):
+
+        st.write(
+            f"- {issue}"
+        )
+
+    st.stop()
+
+st.caption(
+    "Runtime health: ready"
+)
 
 if "current_brief" not in st.session_state:
     st.session_state.current_brief = None
