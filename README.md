@@ -4,7 +4,7 @@ A simple browser interface for building an AI-assisted copywriting workflow.
 
 ## Current version
 
-Version 10 — Visual Creative System
+Version 11 — Outcome Evidence and Learning
 
 ## What the app currently does
 
@@ -218,6 +218,52 @@ Core principles:
 5. Visual novelty must not change product truth or evidence.
 6. Different styling does not automatically mean a different visual idea.
 7. Approved visual history does not prove campaign performance.
+
+## Version 11 — Outcome Evidence and Learning
+
+Version 11 connects approved campaign history to measured
+outcomes without treating correlation as causation.
+
+The system now supports:
+
+- raw CampaignOutcome records
+- deterministic campaign metrics
+- outcome evidence snapshots
+- conversion and attribution context
+- explicit interpretation boundaries
+- comparable previous-period baselines
+- absolute and relative metric changes
+- evidence-bounded AI performance analysis
+- campaign-level creative/outcome provenance links
+- repeated creative evidence ledgers
+- supporting, contradicting, neutral, and incomparable observations
+- bounded CreativeLearning
+- controlled next-test planning
+
+Core evidence ladder:
+
+CampaignOutcome
+→ CampaignMetrics
+→ OutcomeEvidenceSnapshot
+→ PerformanceContext
+→ PerformanceComparison
+→ PerformanceAnalysis
+→ CreativeOutcomeLink
+→ CreativeEvidenceLedger
+→ CreativeLearning
+→ NextTestPlan
+
+Core rules:
+
+1. Approval does not mean performance.
+2. Attribution does not automatically mean causation.
+3. A metric requires measurement context.
+4. Performance change requires a valid baseline.
+5. Historical association is not causal proof.
+6. Contradicting evidence must remain visible.
+7. Learning should produce testable hypotheses, not universal laws.
+8. A test plan is not evidence that the treatment works.
+9. Statistical thresholds must not be invented when no statistical design exists.
 
 ## Current limitation
 

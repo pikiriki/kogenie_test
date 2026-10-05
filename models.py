@@ -1043,3 +1043,31 @@ class CreativeLearning(BaseModel):
         "medium",
         "high",
     ]
+
+
+class NextTestPlan(BaseModel):
+    hypothesis: str
+
+    metric: Literal[
+        "ctr",
+        "cpc",
+        "conversion_rate",
+        "cpa",
+        "roas",
+    ]
+
+    control: str
+
+    treatment: str
+
+    variable_to_change: str
+
+    variables_to_hold_stable: list[str]
+
+    measurement_context: str
+
+    evidence_needed: list[str]
+
+    decision_rule: str
+
+    causal_boundary: list[str]
