@@ -496,3 +496,18 @@ class AlternativeStrategy(BaseModel):
 
 class AlternativeStrategySet(BaseModel):
     strategies: list[AlternativeStrategy]
+
+
+class AlternativeStrategyEvaluation(BaseModel):
+    strategy_index: int
+    research_grounding: str
+    historical_distinctness: str
+    mechanism_fit: str
+    evidence_safety: str
+    reader_relevance: str
+    weaknesses: list[str]
+    recommendation: str
+
+
+class AlternativeStrategyEvaluationSet(BaseModel):
+    evaluations: list[AlternativeStrategyEvaluation]
