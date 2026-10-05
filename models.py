@@ -803,3 +803,19 @@ class CampaignOutcome(BaseModel):
     ]
 
     created_at: str | None = None
+
+
+class CampaignMetrics(BaseModel):
+    outcome_id: int | None = None
+
+    campaign_id: int
+
+    channel: str
+
+    ctr: float | None
+    cpc: float | None
+
+    conversion_rate: float | None
+    cpa: float | None
+
+    roas: float | None
