@@ -59,6 +59,8 @@ class AppConfig(BaseModel):
 
     approved_visuals_path: Path
 
+    workflow_checkpoints_path: Path
+
 
 @lru_cache(maxsize=1)
 def get_config() -> AppConfig:
@@ -109,6 +111,15 @@ def get_config() -> AppConfig:
         )
     )
 
+    workflow_checkpoints_path = (
+        resolve_project_path(
+            os.getenv(
+                "KOGENIE_WORKFLOW_CHECKPOINTS_PATH",
+                "workflow_checkpoints",
+            )
+        )
+    )
+
     return AppConfig(
         text_model=text_model,
 
@@ -130,5 +141,9 @@ def get_config() -> AppConfig:
 
         approved_visuals_path=(
             approved_visuals_path
+        ),
+
+        workflow_checkpoints_path=(
+            workflow_checkpoints_path
         ),
     )

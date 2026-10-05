@@ -1140,3 +1140,21 @@ class WorkflowRun(BaseModel):
     current_stage: str
 
     failure: str | None = None
+
+
+class WorkflowCheckpoint(BaseModel):
+    id: int | None = None
+
+    run_id: str
+
+    stage: str
+
+    artifact_type: str
+
+    artifact_reference: str
+
+    artifact_hash: str
+
+    created_at: str
+
+    valid: bool

@@ -14,6 +14,7 @@ from models import (
     CompleteSalesMessage,
     VisualApprovalRecord,
     VisualAsset,
+    WorkflowCheckpoint,
     WorkflowRun,
 )
 
@@ -360,6 +361,40 @@ def initialize_database():
             current_stage TEXT NOT NULL,
 
             failure TEXT
+        )
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS workflow_checkpoints (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            run_id TEXT NOT NULL,
+
+            stage TEXT NOT NULL,
+
+            artifact_type TEXT NOT NULL,
+
+            artifact_reference TEXT NOT NULL,
+
+            artifact_hash TEXT NOT NULL,
+
+            created_at TEXT NOT NULL,
+
+            valid INTEGER NOT NULL
+                CHECK (
+                    valid IN (0, 1)
+                ),
+
+            UNIQUE (
+                run_id,
+                stage,
+                artifact_type
+            ),
+
+            FOREIGN KEY (run_id)
+                REFERENCES workflow_runs(run_id)
         )
         """
     )
@@ -1799,3 +1834,169 @@ def get_recent_workflow_runs(
 
         for row in rows
     ]
+
+
+def save_workflow_checkpoint_record(
+    checkpoint: WorkflowCheckpoint,
+) -> int:
+
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    existing = cursor.execute(
+        """
+        SELECT
+            id,
+            artifact_reference,
+            artifact_hash,
+            valid
+
+        FROM workflow_checkpoints
+
+        WHERE run_id = ?
+          AND stage = ?
+          AND artifact_type = ?
+        """,
+        (
+            checkpoint.run_id,
+            checkpoint.stage,
+            checkpoint.artifact_type,
+        ),
+    ).fetchone()
+
+    if existing is not None:
+
+        existing_id = existing[0]
+        existing_reference = existing[1]
+        existing_hash = existing[2]
+        existing_valid = bool(
+            existing[3]
+        )
+
+        if (
+            existing_reference
+            == checkpoint.artifact_reference
+            and existing_hash
+            == checkpoint.artifact_hash
+            and existing_valid
+        ):
+
+            connection.close()
+
+            return existing_id
+
+        connection.close()
+
+        raise RuntimeError(
+            (
+                "A checkpoint already exists "
+                "for this run/stage/artifact type "
+                "but points to different state."
+            )
+        )
+
+    cursor.execute(
+        """
+        INSERT INTO workflow_checkpoints (
+            run_id,
+            stage,
+            artifact_type,
+            artifact_reference,
+            artifact_hash,
+            created_at,
+            valid
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            checkpoint.run_id,
+            checkpoint.stage,
+            checkpoint.artifact_type,
+            checkpoint.artifact_reference,
+            checkpoint.artifact_hash,
+            checkpoint.created_at,
+            int(checkpoint.valid),
+        ),
+    )
+
+    checkpoint_id = cursor.lastrowid
+
+    connection.commit()
+    connection.close()
+
+    return checkpoint_id
+
+
+def get_workflow_checkpoints(
+    run_id: str,
+) -> list[WorkflowCheckpoint]:
+
+    connection = get_connection()
+
+    rows = connection.execute(
+        """
+        SELECT
+            id,
+            run_id,
+            stage,
+            artifact_type,
+            artifact_reference,
+            artifact_hash,
+            created_at,
+            valid
+
+        FROM workflow_checkpoints
+
+        WHERE run_id = ?
+
+        ORDER BY id ASC
+        """,
+        (
+            run_id,
+        ),
+    ).fetchall()
+
+    connection.close()
+
+    return [
+        WorkflowCheckpoint(
+            id=row[0],
+            run_id=row[1],
+            stage=row[2],
+            artifact_type=row[3],
+            artifact_reference=row[4],
+            artifact_hash=row[5],
+            created_at=row[6],
+            valid=bool(
+                row[7]
+            ),
+        )
+
+        for row in rows
+    ]
+
+
+def invalidate_workflow_checkpoint(
+    checkpoint_id: int,
+) -> None:
+
+    connection = get_connection()
+
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        UPDATE workflow_checkpoints
+
+        SET valid = 0
+
+        WHERE id = ?
+          AND valid = 1
+        """,
+        (
+            checkpoint_id,
+        ),
+    )
+
+    connection.commit()
+    connection.close()

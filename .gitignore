@@ -22,3 +22,6 @@ generated_visuals/
 
 # Approved visual snapshots (runtime output)
 approved_visuals/
+
+# Workflow checkpoint artifacts (runtime output)
+workflow_checkpoints/

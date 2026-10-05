@@ -11,6 +11,7 @@ from database import (
     get_campaigns,
     get_draft_versions,
     get_recent_workflow_runs,
+    get_workflow_checkpoints,
     initialize_database,
     save_approved_claim,
     save_brand_profile,
@@ -269,6 +270,31 @@ with st.expander(
 
             st.write(
                 f"Failure: {run.failure}"
+            )
+
+        checkpoints = (
+            get_workflow_checkpoints(
+                run.run_id
+            )
+        )
+
+        st.write(
+            f"Checkpoints: "
+            f"{len(checkpoints)}"
+        )
+
+        for checkpoint in checkpoints:
+
+            status = (
+                "valid"
+                if checkpoint.valid
+                else "invalid"
+            )
+
+            st.write(
+                f"- {checkpoint.stage} "
+                f"({checkpoint.artifact_type}) "
+                f"— {status}"
             )
 
         st.divider()

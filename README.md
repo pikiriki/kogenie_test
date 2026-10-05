@@ -291,6 +291,37 @@ Use `.env.example` as the setup template.
 Configuration is loaded once per process and treated
 as immutable.
 
+## Workflow checkpoints and recovery
+
+Substantial workflows now create durable stage checkpoints.
+
+A checkpoint records:
+
+- workflow run ID
+- completed stage
+- artifact type
+- artifact reference
+- SHA-256 artifact fingerprint
+- creation time
+- validity state
+
+Checkpoint artifacts are stored under the configured
+workflow checkpoint directory.
+
+Recovery rules:
+
+1. A stage is reusable only after its checkpoint is saved.
+2. Checkpoint artifacts are hash-validated before reuse.
+3. Missing or corrupted checkpoints are not trusted.
+4. Checkpoint creation is idempotent for identical outputs.
+5. Existing checkpoints are never silently overwritten with
+   different output.
+6. Failed workflow runs remain failed.
+7. Recovery starts a new workflow run.
+8. The recovery run records which failed run and checkpoint
+   it reused.
+9. Recovery resumes after the last contiguous valid stage.
+
 ## Current limitation
 
 The system still relies on humans to enter research, claims, evidence,

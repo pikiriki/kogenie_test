@@ -43,6 +43,7 @@ REQUIRED_DATABASE_TABLES = {
 RUNTIME_DIRECTORIES = [
     CONFIG.generated_visuals_path,
     CONFIG.approved_visuals_path,
+    CONFIG.workflow_checkpoints_path,
 ]
 
 

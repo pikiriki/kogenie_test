@@ -158,6 +158,7 @@ def smoke_artifact_write_read(
     directories = [
         CONFIG.generated_visuals_path,
         CONFIG.approved_visuals_path,
+        CONFIG.workflow_checkpoints_path,
     ]
 
     all_ok = True

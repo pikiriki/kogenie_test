@@ -1,5 +1,6 @@
 from database import (
     get_recent_workflow_runs,
+    get_workflow_checkpoints,
     initialize_database,
 )
 
@@ -68,4 +69,28 @@ for run in runs:
         print(
             "Failure:",
             run.failure,
+        )
+
+    checkpoints = (
+        get_workflow_checkpoints(
+            run.run_id
+        )
+    )
+
+    print(
+        "Checkpoints:",
+        len(checkpoints),
+    )
+
+    for checkpoint in checkpoints:
+
+        print(
+            "  -",
+            checkpoint.stage,
+            checkpoint.artifact_type,
+            (
+                "valid"
+                if checkpoint.valid
+                else "invalid"
+            ),
         )
