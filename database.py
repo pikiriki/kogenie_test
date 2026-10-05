@@ -6,9 +6,14 @@ from datetime import datetime, timezone
 from models import (
     ApprovalRecord,
     CampaignMemory,
+    CampaignOutcome,
     CompleteSalesMessage,
     VisualApprovalRecord,
     VisualAsset,
+)
+
+from outcome_data import (
+    validate_campaign_outcome,
 )
 
 
@@ -263,6 +268,46 @@ def initialize_database():
 
             FOREIGN KEY (approval_record_id)
                 REFERENCES visual_approval_records(id)
+        )
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS campaign_outcomes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            campaign_id INTEGER NOT NULL,
+
+            channel TEXT NOT NULL,
+
+            impressions INTEGER NOT NULL,
+            clicks INTEGER NOT NULL,
+            conversions INTEGER NOT NULL,
+
+            spend REAL NOT NULL,
+            revenue REAL NOT NULL,
+
+            measured_from TEXT NOT NULL,
+            measured_to TEXT NOT NULL,
+
+            source TEXT NOT NULL,
+
+            data_quality TEXT NOT NULL
+                CHECK (
+                    data_quality IN (
+                        'verified',
+                        'manual',
+                        'estimated',
+                        'incomplete'
+                    )
+                ),
+
+            created_at TEXT NOT NULL
+                DEFAULT CURRENT_TIMESTAMP,
+
+            FOREIGN KEY (campaign_id)
+                REFERENCES campaigns(id)
         )
         """
     )
@@ -1271,3 +1316,149 @@ def get_visual_assets(
         )
 
     return assets
+
+
+def save_campaign_outcome(
+    outcome: CampaignOutcome,
+) -> int:
+
+    validate_campaign_outcome(
+        outcome
+    )
+
+    connection = sqlite3.connect(DATABASE_NAME)
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        INSERT INTO campaign_outcomes (
+            campaign_id,
+            channel,
+            impressions,
+            clicks,
+            conversions,
+            spend,
+            revenue,
+            measured_from,
+            measured_to,
+            source,
+            data_quality
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            outcome.campaign_id,
+            outcome.channel,
+            outcome.impressions,
+            outcome.clicks,
+            outcome.conversions,
+            outcome.spend,
+            outcome.revenue,
+            outcome.measured_from,
+            outcome.measured_to,
+            outcome.source,
+            outcome.data_quality,
+        ),
+    )
+
+    outcome_id = cursor.lastrowid
+
+    connection.commit()
+    connection.close()
+
+    return outcome_id
+
+
+def get_campaign_outcomes(
+    campaign_id: int | None = None,
+) -> list[CampaignOutcome]:
+
+    connection = sqlite3.connect(DATABASE_NAME)
+    cursor = connection.cursor()
+
+    if campaign_id is None:
+
+        rows = cursor.execute(
+            """
+            SELECT
+                id,
+                campaign_id,
+                channel,
+                impressions,
+                clicks,
+                conversions,
+                spend,
+                revenue,
+                measured_from,
+                measured_to,
+                source,
+                data_quality,
+                created_at
+
+            FROM campaign_outcomes
+
+            ORDER BY
+                measured_from DESC,
+                id DESC
+            """
+        ).fetchall()
+
+    else:
+
+        rows = cursor.execute(
+            """
+            SELECT
+                id,
+                campaign_id,
+                channel,
+                impressions,
+                clicks,
+                conversions,
+                spend,
+                revenue,
+                measured_from,
+                measured_to,
+                source,
+                data_quality,
+                created_at
+
+            FROM campaign_outcomes
+
+            WHERE campaign_id = ?
+
+            ORDER BY
+                measured_from DESC,
+                id DESC
+            """,
+            (
+                campaign_id,
+            ),
+        ).fetchall()
+
+    connection.close()
+
+    outcomes = []
+
+    for row in rows:
+
+        outcome = CampaignOutcome(
+            id=row[0],
+            campaign_id=row[1],
+            channel=row[2],
+            impressions=row[3],
+            clicks=row[4],
+            conversions=row[5],
+            spend=row[6],
+            revenue=row[7],
+            measured_from=row[8],
+            measured_to=row[9],
+            source=row[10],
+            data_quality=row[11],
+            created_at=row[12],
+        )
+
+        outcomes.append(
+            outcome
+        )
+
+    return outcomes

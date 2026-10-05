@@ -774,3 +774,32 @@ class VisualNoveltyGuidance(BaseModel):
     prohibited_shortcuts: list[str]
 
     visual_direction_options: list[str]
+
+
+class CampaignOutcome(BaseModel):
+    id: int | None = None
+
+    campaign_id: int
+
+    channel: str
+
+    impressions: int
+    clicks: int
+    conversions: int
+
+    spend: float
+    revenue: float
+
+    measured_from: str
+    measured_to: str
+
+    source: str
+
+    data_quality: Literal[
+        "verified",
+        "manual",
+        "estimated",
+        "incomplete",
+    ]
+
+    created_at: str | None = None
