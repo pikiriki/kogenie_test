@@ -919,6 +919,8 @@ class CreativeOutcomeLink(BaseModel):
 
     outcome_snapshot: OutcomeEvidenceSnapshot
 
+    performance_comparison: PerformanceComparison
+
     performance_analysis: PerformanceAnalysis
 
     relationship_status: Literal[
@@ -927,3 +929,82 @@ class CreativeOutcomeLink(BaseModel):
     ]
 
     causal_boundary: list[str]
+
+
+class CreativeEvidenceObservation(BaseModel):
+    campaign_id: int
+
+    outcome_id: int | None
+
+    channel: str
+
+    metric_name: Literal[
+        "ctr",
+        "cpc",
+        "conversion_rate",
+        "cpa",
+        "roas",
+    ]
+
+    absolute_change: float | None
+
+    relative_change_pct: float | None
+
+    direction: Literal[
+        "supports",
+        "contradicts",
+        "neutral",
+    ]
+
+    source_quality: Literal[
+        "verified",
+        "manual",
+        "estimated",
+        "incomplete",
+    ]
+
+
+class CreativeEvidenceLedger(BaseModel):
+    creative_key: str
+
+    metric_name: Literal[
+        "ctr",
+        "cpc",
+        "conversion_rate",
+        "cpa",
+        "roas",
+    ]
+
+    desired_direction: Literal[
+        "higher",
+        "lower",
+    ]
+
+    observations: list[
+        CreativeEvidenceObservation
+    ]
+
+    supporting_observations: list[
+        CreativeEvidenceObservation
+    ]
+
+    contradicting_observations: list[
+        CreativeEvidenceObservation
+    ]
+
+    neutral_observations: list[
+        CreativeEvidenceObservation
+    ]
+
+    incomparable_observations: list[str]
+
+    repeated_pattern: str
+
+    evidence_strength: Literal[
+        "insufficient",
+        "mixed",
+        "emerging",
+        "repeated_association",
+    ]
+
+    learning_boundary: list[str]

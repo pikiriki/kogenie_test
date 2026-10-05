@@ -3,6 +3,7 @@ from models import (
     CreativeOutcomeLink,
     OutcomeEvidenceSnapshot,
     PerformanceAnalysis,
+    PerformanceComparison,
     VisualAsset,
 )
 
@@ -47,6 +48,7 @@ def build_creative_outcome_link(
     campaign_memory: CampaignMemory,
     visual_assets: list[VisualAsset],
     outcome_snapshot: OutcomeEvidenceSnapshot,
+    performance_comparison: PerformanceComparison,
     performance_analysis: PerformanceAnalysis,
 ) -> CreativeOutcomeLink:
 
@@ -210,6 +212,10 @@ def build_creative_outcome_link(
 
         outcome_snapshot=(
             outcome_snapshot
+        ),
+
+        performance_comparison=(
+            performance_comparison
         ),
 
         performance_analysis=(

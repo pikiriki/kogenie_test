@@ -688,6 +688,10 @@ creative_outcome_link = (
             current_snapshot
         ),
 
+        performance_comparison=(
+            comparison
+        ),
+
         performance_analysis=(
             analysis
         ),
