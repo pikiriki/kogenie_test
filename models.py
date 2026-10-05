@@ -1104,3 +1104,17 @@ class ExternalServiceHealth(BaseModel):
     checked_at: str
 
     ready: bool
+
+
+class SmokeTestReport(BaseModel):
+    database_round_trip_ok: bool
+
+    vector_retrieval_ok: bool
+
+    structured_output_ok: bool
+
+    artifact_write_read_ok: bool
+
+    failures: list[str]
+
+    passed: bool

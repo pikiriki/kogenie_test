@@ -115,6 +115,119 @@ if remote_health is not None:
             warning
         )
 
+if st.button(
+    "Run application smoke test"
+):
+
+    remote_health = (
+        st.session_state.get(
+            "external_service_health"
+        )
+    )
+
+    if remote_health is None:
+
+        st.error(
+            "Run remote diagnostics first."
+        )
+
+    elif not remote_health.ready:
+
+        st.error(
+            (
+                "Remote dependencies are not "
+                "ready. Fix those failures "
+                "before running the smoke test."
+            )
+        )
+
+    else:
+
+        # Imported here for the same reason as
+        # external_health: smoke_test creates an
+        # OpenAI client at import time.
+        from smoke_test import (
+            run_application_smoke_test,
+        )
+
+        with st.spinner(
+            "Running KOgenie smoke test..."
+        ):
+
+            st.session_state[
+                "smoke_test_report"
+            ] = (
+                run_application_smoke_test()
+            )
+
+smoke_report = (
+    st.session_state.get(
+        "smoke_test_report"
+    )
+)
+
+if smoke_report is not None:
+
+    if smoke_report.passed:
+
+        st.success(
+            "Application smoke test passed."
+        )
+
+    else:
+
+        st.error(
+            "Application smoke test failed."
+        )
+
+    st.write(
+        "Database round trip:",
+        (
+            "PASS"
+            if smoke_report
+            .database_round_trip_ok
+            else "FAIL"
+        ),
+    )
+
+    st.write(
+        "Vector retrieval:",
+        (
+            "PASS"
+            if smoke_report
+            .vector_retrieval_ok
+            else "FAIL"
+        ),
+    )
+
+    st.write(
+        "Structured output:",
+        (
+            "PASS"
+            if smoke_report
+            .structured_output_ok
+            else "FAIL"
+        ),
+    )
+
+    st.write(
+        "Artifact write/read:",
+        (
+            "PASS"
+            if smoke_report
+            .artifact_write_read_ok
+            else "FAIL"
+        ),
+    )
+
+    for failure in (
+        smoke_report.failures
+    ):
+
+        st.write(
+            f"- {failure}"
+        )
+
 if "current_brief" not in st.session_state:
     st.session_state.current_brief = None
 
