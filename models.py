@@ -840,3 +840,26 @@ class OutcomeEvidenceSnapshot(BaseModel):
     known_gaps: list[str]
 
     interpretation_boundary: list[str]
+
+
+class PerformanceContext(BaseModel):
+    campaign_objective: str
+
+    comparison_type: Literal[
+        "previous_period",
+        "no_valid_baseline",
+    ]
+
+    current_snapshot: OutcomeEvidenceSnapshot
+
+    comparable_outcomes: list[
+        OutcomeEvidenceSnapshot
+    ]
+
+    non_comparable_outcomes: list[str]
+
+    baseline_metrics: CampaignMetrics | None
+
+    current_metrics: CampaignMetrics
+
+    comparison_boundaries: list[str]
