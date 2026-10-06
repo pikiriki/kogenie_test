@@ -16,6 +16,7 @@ from models import (
     VisualApprovalRecord,
     VisualAsset,
     WorkflowCheckpoint,
+    WorkflowLease,
     WorkflowRun,
 )
 
@@ -362,6 +363,24 @@ def initialize_database():
             current_stage TEXT NOT NULL,
 
             failure TEXT
+        )
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS workflow_leases (
+            run_id TEXT PRIMARY KEY,
+
+            worker_id TEXT NOT NULL,
+
+            heartbeat_at TEXT NOT NULL,
+
+            lease_expires_at TEXT NOT NULL,
+
+            FOREIGN KEY (run_id)
+                REFERENCES workflow_runs(run_id)
+                ON DELETE CASCADE
         )
         """
     )
@@ -1771,6 +1790,16 @@ def complete_workflow_run_record(
         ),
     )
 
+    cursor.execute(
+        """
+        DELETE FROM workflow_leases
+        WHERE run_id = ?
+        """,
+        (
+            run_id,
+        ),
+    )
+
     connection.commit()
     connection.close()
 
@@ -1840,6 +1869,16 @@ def fail_workflow_run_record(
         """,
         (
             completed_at,
+            run_id,
+        ),
+    )
+
+    cursor.execute(
+        """
+        DELETE FROM workflow_leases
+        WHERE run_id = ?
+        """,
+        (
             run_id,
         ),
     )
@@ -2376,3 +2415,377 @@ def get_idempotency_record(
         created_at=row[5],
         completed_at=row[6],
     )
+
+
+def claim_workflow_lease_record(
+    lease: WorkflowLease,
+) -> WorkflowLease:
+
+    connection = get_connection()
+
+    try:
+
+        connection.execute(
+            "BEGIN IMMEDIATE"
+        )
+
+        run_row = connection.execute(
+            """
+            SELECT status
+            FROM workflow_runs
+            WHERE run_id = ?
+            """,
+            (
+                lease.run_id,
+            ),
+        ).fetchone()
+
+        if run_row is None:
+
+            raise ValueError(
+                "Workflow run does not exist."
+            )
+
+        if run_row[0] != "running":
+
+            raise ValueError(
+                (
+                    "Workflow lease can only "
+                    "be acquired for a running run."
+                )
+            )
+
+        existing = connection.execute(
+            """
+            SELECT
+                run_id,
+                worker_id,
+                heartbeat_at,
+                lease_expires_at
+
+            FROM workflow_leases
+
+            WHERE run_id = ?
+            """,
+            (
+                lease.run_id,
+            ),
+        ).fetchone()
+
+        if existing is not None:
+
+            existing_lease = WorkflowLease(
+                run_id=existing[0],
+                worker_id=existing[1],
+                heartbeat_at=existing[2],
+                lease_expires_at=existing[3],
+            )
+
+            if (
+                existing_lease.worker_id
+                == lease.worker_id
+            ):
+
+                connection.commit()
+
+                return existing_lease
+
+            raise RuntimeError(
+                (
+                    "Workflow run already has "
+                    "a lease owned by another worker."
+                )
+            )
+
+        connection.execute(
+            """
+            INSERT INTO workflow_leases (
+                run_id,
+                worker_id,
+                heartbeat_at,
+                lease_expires_at
+            )
+            VALUES (?, ?, ?, ?)
+            """,
+            (
+                lease.run_id,
+                lease.worker_id,
+                lease.heartbeat_at,
+                lease.lease_expires_at,
+            ),
+        )
+
+        connection.commit()
+
+        return lease
+
+    except Exception:
+
+        connection.rollback()
+
+        raise
+
+    finally:
+
+        connection.close()
+
+
+def get_workflow_lease(
+    run_id: str,
+) -> WorkflowLease | None:
+
+    connection = get_connection()
+
+    row = connection.execute(
+        """
+        SELECT
+            run_id,
+            worker_id,
+            heartbeat_at,
+            lease_expires_at
+
+        FROM workflow_leases
+
+        WHERE run_id = ?
+        """,
+        (
+            run_id,
+        ),
+    ).fetchone()
+
+    connection.close()
+
+    if row is None:
+        return None
+
+    return WorkflowLease(
+        run_id=row[0],
+        worker_id=row[1],
+        heartbeat_at=row[2],
+        lease_expires_at=row[3],
+    )
+
+
+def update_workflow_lease_record(
+    run_id: str,
+    worker_id: str,
+    heartbeat_at: str,
+    lease_expires_at: str,
+) -> None:
+
+    connection = get_connection()
+
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        UPDATE workflow_leases
+
+        SET
+            heartbeat_at = ?,
+            lease_expires_at = ?
+
+        WHERE run_id = ?
+          AND worker_id = ?
+          AND EXISTS (
+              SELECT 1
+              FROM workflow_runs
+              WHERE workflow_runs.run_id = ?
+                AND workflow_runs.status = 'running'
+          )
+        """,
+        (
+            heartbeat_at,
+            lease_expires_at,
+            run_id,
+            worker_id,
+            run_id,
+        ),
+    )
+
+    if cursor.rowcount != 1:
+
+        connection.rollback()
+        connection.close()
+
+        raise RuntimeError(
+            (
+                "Workflow heartbeat was rejected. "
+                "The run may be terminal or the "
+                "lease may belong to another worker."
+            )
+        )
+
+    connection.commit()
+    connection.close()
+
+
+def get_running_workflow_runs(
+) -> list[WorkflowRun]:
+
+    connection = get_connection()
+
+    rows = connection.execute(
+        """
+        SELECT
+            run_id,
+            workflow_name,
+            started_at,
+            completed_at,
+            status,
+            config_snapshot,
+            current_stage,
+            failure
+
+        FROM workflow_runs
+
+        WHERE status = 'running'
+
+        ORDER BY started_at ASC
+        """
+    ).fetchall()
+
+    connection.close()
+
+    return [
+        WorkflowRun(
+            run_id=row[0],
+            workflow_name=row[1],
+            started_at=row[2],
+            completed_at=row[3],
+            status=row[4],
+            config_snapshot=row[5],
+            current_stage=row[6],
+            failure=row[7],
+        )
+
+        for row in rows
+    ]
+
+
+def fail_workflow_if_stale(
+    run_id: str,
+    checked_at: str,
+    failure: str,
+) -> bool:
+
+    connection = get_connection()
+
+    try:
+
+        connection.execute(
+            "BEGIN IMMEDIATE"
+        )
+
+        run_row = connection.execute(
+            """
+            SELECT status
+            FROM workflow_runs
+            WHERE run_id = ?
+            """,
+            (
+                run_id,
+            ),
+        ).fetchone()
+
+        if (
+            run_row is None
+            or run_row[0] != "running"
+        ):
+
+            connection.commit()
+
+            return False
+
+        lease_row = connection.execute(
+            """
+            SELECT lease_expires_at
+            FROM workflow_leases
+            WHERE run_id = ?
+            """,
+            (
+                run_id,
+            ),
+        ).fetchone()
+
+        checked_time = (
+            datetime.fromisoformat(
+                checked_at
+            )
+        )
+
+        if lease_row is not None:
+
+            expiry_time = (
+                datetime.fromisoformat(
+                    lease_row[0]
+                )
+            )
+
+            if expiry_time > checked_time:
+
+                connection.commit()
+
+                return False
+
+        cursor = connection.cursor()
+
+        cursor.execute(
+            """
+            UPDATE workflow_runs
+
+            SET
+                status = 'failed',
+                completed_at = ?,
+                failure = ?
+
+            WHERE run_id = ?
+              AND status = 'running'
+            """,
+            (
+                checked_at,
+                failure,
+                run_id,
+            ),
+        )
+
+        cursor.execute(
+            """
+            UPDATE idempotency_records
+
+            SET
+                status = 'failed',
+                completed_at = ?
+
+            WHERE run_id = ?
+              AND status = 'in_progress'
+            """,
+            (
+                checked_at,
+                run_id,
+            ),
+        )
+
+        cursor.execute(
+            """
+            DELETE FROM workflow_leases
+            WHERE run_id = ?
+            """,
+            (
+                run_id,
+            ),
+        )
+
+        connection.commit()
+
+        return True
+
+    except Exception:
+
+        connection.rollback()
+
+        raise
+
+    finally:
+
+        connection.close()

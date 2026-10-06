@@ -1178,3 +1178,13 @@ class IdempotencyRecord(BaseModel):
     created_at: str
 
     completed_at: str | None = None
+
+
+class WorkflowLease(BaseModel):
+    run_id: str
+
+    worker_id: str
+
+    heartbeat_at: str
+
+    lease_expires_at: str

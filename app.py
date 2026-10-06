@@ -29,6 +29,12 @@ from workflow_run import (
     complete_workflow_run,
     fail_workflow_run,
 )
+from workflow_lease import (
+    acquire_workflow_lease,
+    fail_stale_workflow_run,
+    find_stale_workflow_runs,
+    heartbeat_workflow_lease,
+)
 from runtime_health import (
     check_runtime_health,
 )
@@ -307,6 +313,89 @@ with st.expander(
             )
 
         st.divider()
+
+if st.button(
+    "Scan stale workflow runs"
+):
+
+    st.session_state[
+        "stale_workflow_runs"
+    ] = (
+        find_stale_workflow_runs()
+    )
+
+stale_runs = (
+    st.session_state.get(
+        "stale_workflow_runs",
+        [],
+    )
+)
+
+if stale_runs:
+
+    st.warning(
+        (
+            f"{len(stale_runs)} stale "
+            "workflow run(s) detected."
+        )
+    )
+
+    for run, lease in stale_runs:
+
+        st.write(
+            f"**{run.workflow_name}**"
+        )
+
+        st.write(
+            f"Run: `{run.run_id}`"
+        )
+
+        st.write(
+            f"Stage: {run.current_stage}"
+        )
+
+        if lease is not None:
+
+            st.write(
+                "Lease expired:",
+                lease.lease_expires_at,
+            )
+
+        else:
+
+            st.write(
+                "Lease: missing"
+            )
+
+        if st.button(
+            "Mark stale run failed",
+            key=(
+                "stale_fail_"
+                + run.run_id
+            ),
+        ):
+
+            try:
+
+                failed_run = (
+                    fail_stale_workflow_run(
+                        run.run_id
+                    )
+                )
+
+                st.success(
+                    (
+                        "Run marked failed. "
+                        "It is now eligible "
+                        "for checkpoint recovery."
+                    )
+                )
+
+            except RuntimeError as error:
+
+                st.info(
+                    str(error)
+                )
 
 if "current_brief" not in st.session_state:
     st.session_state.current_brief = None
@@ -813,7 +902,19 @@ if generate_button:
             else:
 
                 try:
+                    acquire_workflow_lease(
+                        run.run_id
+                    )
+
+                    heartbeat_workflow_lease(
+                        run.run_id
+                    )
+
                     generated_copy = generate_copy(brief)
+
+                    heartbeat_workflow_lease(
+                        run.run_id
+                    )
 
                     st.session_state.current_campaign_id = None
                     st.session_state.current_brief = brief

@@ -61,6 +61,8 @@ class AppConfig(BaseModel):
 
     workflow_checkpoints_path: Path
 
+    workflow_lease_seconds: int
+
 
 @lru_cache(maxsize=1)
 def get_config() -> AppConfig:
@@ -120,6 +122,22 @@ def get_config() -> AppConfig:
         )
     )
 
+    workflow_lease_seconds = int(
+        os.getenv(
+            "KOGENIE_WORKFLOW_LEASE_SECONDS",
+            "900",
+        ).strip()
+    )
+
+    if workflow_lease_seconds <= 0:
+
+        raise ValueError(
+            (
+                "KOGENIE_WORKFLOW_LEASE_SECONDS "
+                "must be greater than zero."
+            )
+        )
+
     return AppConfig(
         text_model=text_model,
 
@@ -145,5 +163,9 @@ def get_config() -> AppConfig:
 
         workflow_checkpoints_path=(
             workflow_checkpoints_path
+        ),
+
+        workflow_lease_seconds=(
+            workflow_lease_seconds
         ),
     )

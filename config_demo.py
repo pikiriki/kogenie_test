@@ -64,3 +64,12 @@ print("\nSAME CONFIG OBJECT")
 print(
     config is config_again
 )
+
+
+print(
+    "\nWORKFLOW LEASE SECONDS"
+)
+
+print(
+    config.workflow_lease_seconds
+)

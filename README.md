@@ -345,6 +345,34 @@ Rules:
 10. Request fingerprints contain request identity, not secrets
     or volatile timestamp/random values.
 
+## Workflow leases and stale-run recovery
+
+Running workflows now maintain a temporary liveness lease.
+
+Each lease records:
+
+- run ID
+- worker ID
+- last heartbeat time
+- lease expiry time
+
+Rules:
+
+1. One running workflow has at most one active lease.
+2. A worker can only renew the lease it owns.
+3. Workflow stages refresh the lease while work progresses.
+4. Completed or failed runs release their lease.
+5. A running workflow with no lease cannot prove liveness.
+6. An expired lease marks the workflow as stale.
+7. Stale status is rechecked transactionally before a run is failed.
+8. Stale failure also updates any attached idempotency record.
+9. Failed stale runs remain historical failures.
+10. Recovery creates a new WorkflowRun and reuses only validated checkpoints.
+11. Lease duration is configurable through
+    `KOGENIE_WORKFLOW_LEASE_SECONDS`.
+12. Stage-boundary heartbeats are not a substitute for a background
+    heartbeat when a single blocking stage may outlive the lease.
+
 ## Current limitation
 
 The system still relies on humans to enter research, claims, evidence,
