@@ -322,6 +322,29 @@ Recovery rules:
    it reused.
 9. Recovery resumes after the last contiguous valid stage.
 
+## Idempotency and duplicate-run protection
+
+Side-effect-producing workflows can now be started with
+an idempotency key and a deterministic request fingerprint.
+
+Rules:
+
+1. One idempotency key represents one logical user intent.
+2. Repeating the same key with the same request reuses the
+   existing WorkflowRun.
+3. Repeating the same key with a different request is rejected.
+4. WorkflowRun creation and idempotency claiming occur in one
+   SQLite transaction.
+5. Concurrent requests cannot intentionally create two workflow
+   runs for the same idempotency key.
+6. Completed requests are not rerun when retried.
+7. Failed idempotent requests remain failed.
+8. Recovery from failed work uses workflow checkpoints and a
+   new WorkflowRun.
+9. A deliberate fresh attempt receives a new idempotency key.
+10. Request fingerprints contain request identity, not secrets
+    or volatile timestamp/random values.
+
 ## Current limitation
 
 The system still relies on humans to enter research, claims, evidence,

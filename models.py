@@ -1158,3 +1158,23 @@ class WorkflowCheckpoint(BaseModel):
     created_at: str
 
     valid: bool
+
+
+class IdempotencyRecord(BaseModel):
+    idempotency_key: str
+
+    operation: str
+
+    request_fingerprint: str
+
+    run_id: str
+
+    status: Literal[
+        "in_progress",
+        "completed",
+        "failed",
+    ]
+
+    created_at: str
+
+    completed_at: str | None = None

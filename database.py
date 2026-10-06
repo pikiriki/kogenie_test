@@ -12,6 +12,7 @@ from models import (
     CampaignMemory,
     CampaignOutcome,
     CompleteSalesMessage,
+    IdempotencyRecord,
     VisualApprovalRecord,
     VisualAsset,
     WorkflowCheckpoint,
@@ -392,6 +393,36 @@ def initialize_database():
                 stage,
                 artifact_type
             ),
+
+            FOREIGN KEY (run_id)
+                REFERENCES workflow_runs(run_id)
+        )
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS idempotency_records (
+            idempotency_key TEXT PRIMARY KEY,
+
+            operation TEXT NOT NULL,
+
+            request_fingerprint TEXT NOT NULL,
+
+            run_id TEXT NOT NULL UNIQUE,
+
+            status TEXT NOT NULL
+                CHECK (
+                    status IN (
+                        'in_progress',
+                        'completed',
+                        'failed'
+                    )
+                ),
+
+            created_at TEXT NOT NULL,
+
+            completed_at TEXT,
 
             FOREIGN KEY (run_id)
                 REFERENCES workflow_runs(run_id)
@@ -1723,6 +1754,23 @@ def complete_workflow_run_record(
             )
         )
 
+    cursor.execute(
+        """
+        UPDATE idempotency_records
+
+        SET
+            status = 'completed',
+            completed_at = ?
+
+        WHERE run_id = ?
+          AND status = 'in_progress'
+        """,
+        (
+            completed_at,
+            run_id,
+        ),
+    )
+
     connection.commit()
     connection.close()
 
@@ -1778,6 +1826,23 @@ def fail_workflow_run_record(
                 "terminal status."
             )
         )
+
+    cursor.execute(
+        """
+        UPDATE idempotency_records
+
+        SET
+            status = 'failed',
+            completed_at = ?
+
+        WHERE run_id = ?
+          AND status = 'in_progress'
+        """,
+        (
+            completed_at,
+            run_id,
+        ),
+    )
 
     connection.commit()
     connection.close()
@@ -2000,3 +2065,314 @@ def invalidate_workflow_checkpoint(
 
     connection.commit()
     connection.close()
+
+
+def claim_idempotent_workflow_record(
+    record: IdempotencyRecord,
+    run: WorkflowRun,
+) -> tuple[
+    IdempotencyRecord,
+    WorkflowRun,
+    bool,
+]:
+
+    if record.run_id != run.run_id:
+
+        raise ValueError(
+            (
+                "Idempotency record and "
+                "workflow run have different "
+                "run IDs."
+            )
+        )
+
+    if record.status != "in_progress":
+
+        raise ValueError(
+            (
+                "A newly claimed idempotency "
+                "record must start as in_progress."
+            )
+        )
+
+    if run.status != "running":
+
+        raise ValueError(
+            (
+                "A newly claimed workflow "
+                "must start as running."
+            )
+        )
+
+    connection = get_connection()
+
+    try:
+
+        connection.execute(
+            "BEGIN IMMEDIATE"
+        )
+
+        existing_row = connection.execute(
+            """
+            SELECT
+                idempotency_key,
+                operation,
+                request_fingerprint,
+                run_id,
+                status,
+                created_at,
+                completed_at
+
+            FROM idempotency_records
+
+            WHERE idempotency_key = ?
+            """,
+            (
+                record.idempotency_key,
+            ),
+        ).fetchone()
+
+        if existing_row is not None:
+
+            existing_record = (
+                IdempotencyRecord(
+                    idempotency_key=(
+                        existing_row[0]
+                    ),
+
+                    operation=(
+                        existing_row[1]
+                    ),
+
+                    request_fingerprint=(
+                        existing_row[2]
+                    ),
+
+                    run_id=(
+                        existing_row[3]
+                    ),
+
+                    status=(
+                        existing_row[4]
+                    ),
+
+                    created_at=(
+                        existing_row[5]
+                    ),
+
+                    completed_at=(
+                        existing_row[6]
+                    ),
+                )
+            )
+
+            if (
+                existing_record.operation
+                != record.operation
+            ):
+
+                raise ValueError(
+                    (
+                        "Idempotency key was reused "
+                        "for a different operation."
+                    )
+                )
+
+            if (
+                existing_record
+                .request_fingerprint
+                != record.request_fingerprint
+            ):
+
+                raise ValueError(
+                    (
+                        "Idempotency key was reused "
+                        "with a different request."
+                    )
+                )
+
+            run_row = connection.execute(
+                """
+                SELECT
+                    run_id,
+                    workflow_name,
+                    started_at,
+                    completed_at,
+                    status,
+                    config_snapshot,
+                    current_stage,
+                    failure
+
+                FROM workflow_runs
+
+                WHERE run_id = ?
+                """,
+                (
+                    existing_record.run_id,
+                ),
+            ).fetchone()
+
+            if run_row is None:
+
+                raise RuntimeError(
+                    (
+                        "Idempotency record points "
+                        "to a missing WorkflowRun."
+                    )
+                )
+
+            existing_run = WorkflowRun(
+                run_id=run_row[0],
+
+                workflow_name=run_row[1],
+
+                started_at=run_row[2],
+
+                completed_at=run_row[3],
+
+                status=run_row[4],
+
+                config_snapshot=run_row[5],
+
+                current_stage=run_row[6],
+
+                failure=run_row[7],
+            )
+
+            expected_status = {
+                "running": "in_progress",
+                "completed": "completed",
+                "failed": "failed",
+            }[
+                existing_run.status
+            ]
+
+            if (
+                existing_record.status
+                != expected_status
+            ):
+
+                raise RuntimeError(
+                    (
+                        "Idempotency record and "
+                        "WorkflowRun status have drifted."
+                    )
+                )
+
+            connection.commit()
+
+            return (
+                existing_record,
+                existing_run,
+                False,
+            )
+
+        connection.execute(
+            """
+            INSERT INTO workflow_runs (
+                run_id,
+                workflow_name,
+                started_at,
+                completed_at,
+                status,
+                config_snapshot,
+                current_stage,
+                failure
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                run.run_id,
+                run.workflow_name,
+                run.started_at,
+                run.completed_at,
+                run.status,
+                run.config_snapshot,
+                run.current_stage,
+                run.failure,
+            ),
+        )
+
+        connection.execute(
+            """
+            INSERT INTO idempotency_records (
+                idempotency_key,
+                operation,
+                request_fingerprint,
+                run_id,
+                status,
+                created_at,
+                completed_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                record.idempotency_key,
+                record.operation,
+                record.request_fingerprint,
+                record.run_id,
+                record.status,
+                record.created_at,
+                record.completed_at,
+            ),
+        )
+
+        connection.commit()
+
+        return (
+            record,
+            run,
+            True,
+        )
+
+    except Exception:
+
+        connection.rollback()
+
+        raise
+
+    finally:
+
+        connection.close()
+
+
+def get_idempotency_record(
+    idempotency_key: str,
+) -> IdempotencyRecord | None:
+
+    connection = get_connection()
+
+    row = connection.execute(
+        """
+        SELECT
+            idempotency_key,
+            operation,
+            request_fingerprint,
+            run_id,
+            status,
+            created_at,
+            completed_at
+
+        FROM idempotency_records
+
+        WHERE idempotency_key = ?
+        """,
+        (
+            idempotency_key,
+        ),
+    ).fetchone()
+
+    connection.close()
+
+    if row is None:
+        return None
+
+    return IdempotencyRecord(
+        idempotency_key=row[0],
+        operation=row[1],
+        request_fingerprint=row[2],
+        run_id=row[3],
+        status=row[4],
+        created_at=row[5],
+        completed_at=row[6],
+    )

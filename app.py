@@ -20,6 +20,15 @@ from database import (
 )
 
 from models import BrandProfile, CampaignBrief, CopyDraft
+from idempotency import (
+    create_idempotency_key,
+    fingerprint_request,
+    start_idempotent_workflow,
+)
+from workflow_run import (
+    complete_workflow_run,
+    fail_workflow_run,
+)
 from runtime_health import (
     check_runtime_health,
 )
@@ -643,7 +652,70 @@ else:
             "No claims saved for this brand yet."
         )
 
+# Idempotency (Lesson 117): one intent key per distinct
+# copy-generation request. Same inputs keep the same key, so a
+# double click or rerun reuses the existing WorkflowRun.
+copy_generation_request = {
+    "brand_profile_id": (
+        selected_brand_profile["id"]
+        if selected_brand_profile is not None
+        else None
+    ),
+    "product_description": product_description,
+    "audience": audience,
+    "campaign_objective": campaign_objective,
+    "tone": tone,
+    "preferred_words": preferred_words,
+    "avoided_words": avoided_words,
+    "approved_claims": approved_claims,
+}
+
+current_request_fingerprint = (
+    fingerprint_request(
+        operation=(
+            "copy_generation"
+        ),
+
+        request_payload=(
+            copy_generation_request
+        ),
+    )
+)
+
+stored_fingerprint = (
+    st.session_state.get(
+        "copy_generation_fingerprint"
+    )
+)
+
+if (
+    stored_fingerprint
+    != current_request_fingerprint
+):
+
+    st.session_state[
+        "copy_generation_fingerprint"
+    ] = (
+        current_request_fingerprint
+    )
+
+    st.session_state[
+        "copy_generation_idempotency_key"
+    ] = (
+        create_idempotency_key()
+    )
+
 generate_button = st.button("Generate Copy")
+
+if st.button(
+    "Start fresh attempt"
+):
+
+    st.session_state[
+        "copy_generation_idempotency_key"
+    ] = (
+        create_idempotency_key()
+    )
 
 api_key = os.getenv("OPENAI_API_KEY")
 
@@ -665,23 +737,113 @@ if generate_button:
                 approved_claims=approved_claims
             )
 
-            try:
-                generated_copy = generate_copy(brief)
+            (
+                idempotency_record,
+                run,
+                created_new,
+            ) = start_idempotent_workflow(
+                idempotency_key=(
+                    st.session_state[
+                        "copy_generation_idempotency_key"
+                    ]
+                ),
 
-                st.session_state.current_campaign_id = None
-                st.session_state.current_brief = brief
-                st.session_state.generated_copy = generated_copy
-                st.session_state.working_copy = generated_copy
-                st.session_state.working_copy_source = "ai"
+                operation=(
+                    "copy_generation"
+                ),
 
-                st.session_state.edit_headline = generated_copy.headline
-                st.session_state.edit_body = generated_copy.body
-                st.session_state.edit_cta = generated_copy.cta
+                request_payload=(
+                    copy_generation_request
+                ),
 
-            except Exception:
-                st.error(
-                    "Something went wrong while generating the copy. Please try again."
+                workflow_name=(
+                    "copy_generation"
+                ),
+
+                initial_stage=(
+                    "copy_generation"
+                ),
+            )
+
+            if not created_new:
+
+                if (
+                    idempotency_record.status
+                    == "in_progress"
+                ):
+
+                    st.info(
+                        (
+                            "This copy-generation "
+                            "request is already running."
+                        )
+                    )
+
+                elif (
+                    idempotency_record.status
+                    == "completed"
+                ):
+
+                    st.success(
+                        (
+                            "This exact request already "
+                            "completed."
+                        )
+                    )
+
+                else:
+
+                    st.error(
+                        (
+                            "This request previously failed."
+                        )
+                    )
+
+                    st.write(
+                        (
+                            "Use workflow recovery or "
+                            "start a deliberate fresh attempt."
+                        )
+                    )
+
+                st.write(
+                    f"Run: {run.run_id}"
                 )
+
+            else:
+
+                try:
+                    generated_copy = generate_copy(brief)
+
+                    st.session_state.current_campaign_id = None
+                    st.session_state.current_brief = brief
+                    st.session_state.generated_copy = generated_copy
+                    st.session_state.working_copy = generated_copy
+                    st.session_state.working_copy_source = "ai"
+
+                    st.session_state.edit_headline = generated_copy.headline
+                    st.session_state.edit_body = generated_copy.body
+                    st.session_state.edit_cta = generated_copy.cta
+
+                    complete_workflow_run(
+                        run.run_id
+                    )
+
+                except Exception as error:
+
+                    fail_workflow_run(
+                        run_id=run.run_id,
+
+                        failure_summary=(
+                            "Copy generation failed. "
+                            f"Exception type: "
+                            f"{type(error).__name__}."
+                        ),
+                    )
+
+                    st.error(
+                        "Something went wrong while generating the copy. Please try again."
+                    )
 
         else:
             st.error("OpenAI API key is missing.")
