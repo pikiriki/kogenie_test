@@ -12,6 +12,7 @@ from database import (
     get_draft_versions,
     get_recent_workflow_runs,
     get_workflow_checkpoints,
+    get_workflow_events,
     initialize_database,
     save_approved_claim,
     save_brand_profile,
@@ -311,6 +312,53 @@ with st.expander(
                 f"({checkpoint.artifact_type}) "
                 f"— {status}"
             )
+
+        events = get_workflow_events(
+            run.run_id
+        )
+
+        with st.expander(
+            f"Timeline — {run.run_id}"
+        ):
+
+            if not events:
+
+                st.write(
+                    "No operational events recorded."
+                )
+
+            else:
+
+                for event in events:
+
+                    st.write(
+                        (
+                            f"**{event.event_type}** "
+                            f"— {event.occurred_at}"
+                        )
+                    )
+
+                    if event.stage:
+
+                        st.write(
+                            f"Stage: {event.stage}"
+                        )
+
+                    st.write(
+                        event.message
+                    )
+
+                    if event.metadata:
+
+                        with st.expander(
+                            "Event metadata"
+                        ):
+
+                            st.json(
+                                event.metadata
+                            )
+
+                    st.divider()
 
         st.divider()
 

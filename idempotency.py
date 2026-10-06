@@ -24,6 +24,10 @@ from workflow_run import (
     utc_now,
 )
 
+from workflow_event import (
+    record_workflow_event,
+)
+
 
 CONFIG = get_config()
 
@@ -223,9 +227,82 @@ def start_idempotent_workflow(
         completed_at=None,
     )
 
-    return (
+    (
+        claimed_record,
+        claimed_run,
+        created_new,
+    ) = (
         claim_idempotent_workflow_record(
             record=record,
             run=run,
         )
+    )
+
+    if created_new:
+
+        record_workflow_event(
+            run_id=(
+                claimed_run.run_id
+            ),
+
+            event_type="run_started",
+
+            stage=(
+                claimed_run.current_stage
+            ),
+
+            message=(
+                f"Workflow "
+                f"'{claimed_run.workflow_name}' "
+                "started through an "
+                "idempotent request."
+            ),
+
+            metadata={
+                "operation": (
+                    claimed_record.operation
+                ),
+
+                "request_fingerprint": (
+                    claimed_record
+                    .request_fingerprint
+                ),
+            },
+        )
+
+    else:
+
+        record_workflow_event(
+            run_id=(
+                claimed_run.run_id
+            ),
+
+            event_type=(
+                "idempotency_reused"
+            ),
+
+            stage=(
+                claimed_run.current_stage
+            ),
+
+            message=(
+                "Existing workflow run reused "
+                "for repeated idempotent request."
+            ),
+
+            metadata={
+                "operation": (
+                    claimed_record.operation
+                ),
+
+                "idempotency_status": (
+                    claimed_record.status
+                ),
+            },
+        )
+
+    return (
+        claimed_record,
+        claimed_run,
+        created_new,
     )

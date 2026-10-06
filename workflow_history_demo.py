@@ -1,4 +1,5 @@
 from database import (
+    count_workflow_events,
     get_recent_workflow_runs,
     get_workflow_checkpoints,
     initialize_database,
@@ -94,3 +95,14 @@ for run in runs:
                 else "invalid"
             ),
         )
+
+    event_count = (
+        count_workflow_events(
+            run.run_id
+        )
+    )
+
+    print(
+        "Events:",
+        event_count,
+    )

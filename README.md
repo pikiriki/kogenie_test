@@ -373,6 +373,53 @@ Rules:
 12. Stage-boundary heartbeats are not a substitute for a background
     heartbeat when a single blocking stage may outlive the lease.
 
+## Structured workflow events
+
+KOgenie records append-only operational events for important
+workflow transitions.
+
+Each event contains:
+
+- unique event ID
+- workflow run ID
+- structured event type
+- workflow stage
+- UTC timestamp
+- human-readable message
+- small structured metadata
+
+The workflow run ID acts as the primary correlation key.
+
+Recorded event types currently include:
+
+- run_started
+- stage_changed
+- checkpoint_saved
+- lease_acquired
+- heartbeat
+- idempotency_reused
+- recovery_started
+- stale_detected
+- run_completed
+- run_failed
+- diagnostic
+
+Operational-event rules:
+
+1. WorkflowRun remains the authoritative workflow state.
+2. WorkflowEvent is append-only diagnostic history.
+3. Existing events are not rewritten when recovery occurs.
+4. Events use stable machine-readable event types.
+5. Metadata should contain identifiers, counters, hashes and
+   operational context rather than full customer content.
+6. Secrets must not be written into event metadata.
+7. Large artifacts and prompts belong in their own artifact
+   systems rather than the operational event table.
+8. Related events within one workflow are correlated by run ID.
+9. Recovery events may reference a source run ID to connect
+   related workflow attempts.
+10. This is structured observability, not full event sourcing.
+
 ## Current limitation
 
 The system still relies on humans to enter research, claims, evidence,

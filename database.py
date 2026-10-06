@@ -16,6 +16,7 @@ from models import (
     VisualApprovalRecord,
     VisualAsset,
     WorkflowCheckpoint,
+    WorkflowEvent,
     WorkflowLease,
     WorkflowRun,
 )
@@ -381,6 +382,41 @@ def initialize_database():
             FOREIGN KEY (run_id)
                 REFERENCES workflow_runs(run_id)
                 ON DELETE CASCADE
+        )
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS workflow_events (
+            event_id TEXT PRIMARY KEY,
+
+            run_id TEXT NOT NULL,
+
+            event_type TEXT NOT NULL,
+
+            stage TEXT,
+
+            occurred_at TEXT NOT NULL,
+
+            message TEXT NOT NULL,
+
+            metadata_json TEXT NOT NULL,
+
+            FOREIGN KEY (run_id)
+                REFERENCES workflow_runs(run_id)
+        )
+        """
+    )
+
+    cursor.execute(
+        """
+        CREATE INDEX IF NOT EXISTS
+        idx_workflow_events_run_time
+
+        ON workflow_events (
+            run_id,
+            occurred_at
         )
         """
     )
@@ -2789,3 +2825,124 @@ def fail_workflow_if_stale(
     finally:
 
         connection.close()
+
+
+def append_workflow_event_record(
+    event: WorkflowEvent,
+) -> None:
+
+    connection = get_connection()
+
+    try:
+
+        connection.execute(
+            """
+            INSERT INTO workflow_events (
+                event_id,
+                run_id,
+                event_type,
+                stage,
+                occurred_at,
+                message,
+                metadata_json
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                event.event_id,
+                event.run_id,
+                event.event_type,
+                event.stage,
+                event.occurred_at,
+                event.message,
+                json.dumps(
+                    event.metadata,
+                    ensure_ascii=False,
+                    sort_keys=True,
+                    default=str,
+                ),
+            ),
+        )
+
+        connection.commit()
+
+    finally:
+
+        connection.close()
+
+
+def get_workflow_events(
+    run_id: str,
+) -> list[WorkflowEvent]:
+
+    connection = get_connection()
+
+    rows = connection.execute(
+        """
+        SELECT
+            event_id,
+            run_id,
+            event_type,
+            stage,
+            occurred_at,
+            message,
+            metadata_json
+
+        FROM workflow_events
+
+        WHERE run_id = ?
+
+        ORDER BY
+            occurred_at ASC,
+            rowid ASC
+        """,
+        (
+            run_id,
+        ),
+    ).fetchall()
+
+    connection.close()
+
+    return [
+        WorkflowEvent(
+            event_id=row[0],
+            run_id=row[1],
+            event_type=row[2],
+            stage=row[3],
+            occurred_at=row[4],
+            message=row[5],
+            metadata=(
+                json.loads(
+                    row[6]
+                )
+            ),
+        )
+
+        for row in rows
+    ]
+
+
+def count_workflow_events(
+    run_id: str,
+) -> int:
+
+    connection = get_connection()
+
+    row = connection.execute(
+        """
+        SELECT COUNT(*)
+
+        FROM workflow_events
+
+        WHERE run_id = ?
+        """,
+        (
+            run_id,
+        ),
+    ).fetchone()
+
+    connection.close()
+
+    return int(
+        row[0]
+    )

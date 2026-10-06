@@ -21,6 +21,10 @@ from models import (
     WorkflowRun,
 )
 
+from workflow_event import (
+    record_workflow_event,
+)
+
 
 CONFIG = get_config()
 
@@ -100,6 +104,26 @@ def start_workflow_run(
         run
     )
 
+    record_workflow_event(
+        run_id=run.run_id,
+
+        event_type="run_started",
+
+        stage=run.current_stage,
+
+        message=(
+            f"Workflow "
+            f"'{run.workflow_name}' "
+            "started."
+        ),
+
+        metadata={
+            "workflow_name": (
+                run.workflow_name
+            ),
+        },
+    )
+
     return run
 
 
@@ -107,6 +131,17 @@ def set_workflow_stage(
     run_id: str,
     stage: str,
 ) -> WorkflowRun:
+
+    previous = get_workflow_run(
+        run_id
+    )
+
+
+    if previous is None:
+
+        raise ValueError(
+            "Workflow run does not exist."
+        )
 
     update_workflow_run_stage(
         run_id,
@@ -122,6 +157,28 @@ def set_workflow_stage(
         raise RuntimeError(
             "Could not reload workflow run."
         )
+
+    record_workflow_event(
+        run_id=run_id,
+
+        event_type="stage_changed",
+
+        stage=stage,
+
+        message=(
+            "Workflow stage changed "
+            f"from '{previous.current_stage}' "
+            f"to '{stage}'."
+        ),
+
+        metadata={
+            "from_stage": (
+                previous.current_stage
+            ),
+
+            "to_stage": stage,
+        },
+    )
 
     return run
 
@@ -146,6 +203,19 @@ def complete_workflow_run(
             "Could not reload completed run."
         )
 
+    record_workflow_event(
+        run_id=run_id,
+
+        event_type="run_completed",
+
+        stage="completed",
+
+        message=(
+            "Workflow completed successfully."
+        ),
+
+        metadata={},
+    )
 
     return run
 
@@ -172,5 +242,22 @@ def fail_workflow_run(
             "Could not reload failed run."
         )
 
+    record_workflow_event(
+        run_id=run_id,
+
+        event_type="run_failed",
+
+        stage=run.current_stage,
+
+        message=(
+            "Workflow entered failed state."
+        ),
+
+        metadata={
+            "failure_summary": (
+                run.failure
+            ),
+        },
+    )
 
     return run

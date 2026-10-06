@@ -31,6 +31,10 @@ from workflow_run import (
     start_workflow_run,
 )
 
+from workflow_event import (
+    record_workflow_event,
+)
+
 
 CONFIG = get_config()
 
@@ -277,11 +281,42 @@ def create_workflow_checkpoint(
         )
     )
 
-    return checkpoint.model_copy(
-        update={
-            "id": checkpoint_id,
-        }
+    saved_checkpoint = (
+        checkpoint.model_copy(
+            update={
+                "id": checkpoint_id,
+            }
+        )
     )
+
+    record_workflow_event(
+        run_id=run_id,
+
+        event_type="checkpoint_saved",
+
+        stage=stage,
+
+        message=(
+            f"Checkpoint confirmed for "
+            f"stage '{stage}'."
+        ),
+
+        metadata={
+            "checkpoint_id": (
+                checkpoint_id
+            ),
+
+            "artifact_type": (
+                artifact_type
+            ),
+
+            "artifact_hash": (
+                expected_hash
+            ),
+        },
+    )
+
+    return saved_checkpoint
 
 
 def validate_workflow_checkpoint(
@@ -585,6 +620,38 @@ def start_recovery_run(
         payload=(
             recovery_context
         ),
+    )
+
+    record_workflow_event(
+        run_id=recovery_run.run_id,
+
+        event_type="recovery_started",
+
+        stage=resume_stage,
+
+        message=(
+            "Recovery workflow started "
+            "from validated checkpoint history."
+        ),
+
+        metadata={
+            "source_run_id": (
+                source_run_id
+            ),
+
+            "resume_stage": (
+                resume_stage
+            ),
+
+            "last_safe_stage": (
+                last_checkpoint.stage
+
+                if last_checkpoint
+                is not None
+
+                else None
+            ),
+        },
     )
 
     return (

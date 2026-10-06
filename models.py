@@ -1,4 +1,7 @@
-from typing import Literal
+from typing import (
+    Any,
+    Literal,
+)
 
 from pydantic import BaseModel, ConfigDict
 
@@ -1188,3 +1191,31 @@ class WorkflowLease(BaseModel):
     heartbeat_at: str
 
     lease_expires_at: str
+
+
+class WorkflowEvent(BaseModel):
+    event_id: str
+
+    run_id: str
+
+    event_type: Literal[
+        "run_started",
+        "stage_changed",
+        "checkpoint_saved",
+        "lease_acquired",
+        "heartbeat",
+        "idempotency_reused",
+        "recovery_started",
+        "stale_detected",
+        "run_completed",
+        "run_failed",
+        "diagnostic",
+    ]
+
+    stage: str | None = None
+
+    occurred_at: str
+
+    message: str
+
+    metadata: dict[str, Any]

@@ -24,6 +24,10 @@ from models import (
     WorkflowRun,
 )
 
+from workflow_event import (
+    record_workflow_event,
+)
+
 
 CONFIG = get_config()
 
@@ -109,11 +113,37 @@ def acquire_workflow_lease(
         ),
     )
 
-    return (
+    claimed_lease = (
         claim_workflow_lease_record(
             lease
         )
     )
+
+    record_workflow_event(
+        run_id=run_id,
+
+        event_type="lease_acquired",
+
+        stage=None,
+
+        message=(
+            "Workflow lease acquired "
+            "or confirmed."
+        ),
+
+        metadata={
+            "worker_id": (
+                worker_id
+            ),
+
+            "lease_expires_at": (
+                claimed_lease
+                .lease_expires_at
+            ),
+        },
+    )
+
+    return claimed_lease
 
 
 def heartbeat_workflow_lease(
@@ -164,6 +194,27 @@ def heartbeat_workflow_lease(
             "Workflow lease disappeared."
         )
 
+    record_workflow_event(
+        run_id=run_id,
+
+        event_type="heartbeat",
+
+        stage=None,
+
+        message=(
+            "Workflow heartbeat renewed."
+        ),
+
+        metadata={
+            "worker_id": (
+                worker_id
+            ),
+
+            "lease_expires_at": (
+                lease.lease_expires_at
+            ),
+        },
+    )
 
     return lease
 
@@ -278,5 +329,20 @@ def fail_stale_workflow_run(
             "Could not reload stale workflow."
         )
 
+    record_workflow_event(
+        run_id=run_id,
+
+        event_type="stale_detected",
+
+        stage=run.current_stage,
+
+        message=(
+            "Workflow was marked failed "
+            "after liveness could no "
+            "longer be established."
+        ),
+
+        metadata={},
+    )
 
     return run
